@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dtruss Elevator - Command Center & YTD Analytics Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet.js Map Library -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #070C1B;
+            --gold-color: #D4AF37;
+            --gold-glow: rgba(212, 175, 55, 0.4);
+            --white-color: #FFFFFF;
+            --gray-color: #94A3B8;
+            --panel-bg: #111827;
+            --row-even: #182238;
+            --row-odd: #0F172A;
+            --slide-width: 1280px;
+            --slide-height: 680px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Prompt', sans-serif;
+        }
+
+        body {
+            background-color: #000;
+            color: var(--white-color);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+        }
+
+        /* Top Control Bar */
+        #tv-controls {
+            width: 100%;
+            background: #0B1120;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--gold-color);
+            box-shadow: 0 0 15px var(--gold-glow);
+            z-index: 1000;
+            flex-shrink: 0;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .digital-clock {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 18px;
+            color: #38bdf8;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 4px 12px;
+            border-radius: 4px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+            letter-spacing: 1px;
+            margin-right: 15px;
+        }
+
+        button {
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        button.active-mode {
+            background: var(--gold-color);
+            color: #000;
+            border-color: var(--gold-color);
+            font-weight: 600;
+            box-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        .btn-sync { background: #0284c7; border-color: #0369a1; }
+        .btn-sync:hover:not(:disabled) { background: #0369a1; }
+        .btn-play { background: #2563eb; border-color: #1d4ed8; }
+        .btn-play.playing { background: #dc2626; border-color: #b91c1c; animation: sirenPulse 1.5s infinite; }
+        .btn-fullscreen { background: #7c3aed; border-color: #6d28d9; }
+
+        .slide-counter {
+            background: rgba(0,0,0,0.6);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: var(--gold-color);
+            font-weight: 600;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        /* Bottom Live Ticker */
+        #ticker-bar {
+            width: 100%;
+            height: 36px;
+            background: #030712;
+            border-top: 1px solid var(--gold-color);
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            z-index: 1000;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .ticker-label {
+            background: #dc2626;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 0 15px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 10;
+            box-shadow: 5px 0 10px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+            animation: sirenPulse 2s infinite;
+        }
+
+        .ticker-wrap {
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .ticker-text {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee 30s linear infinite;
+            font-size: 14px;
+            color: #e2e8f0;
+        }
+
+        @keyframes marquee {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+
+        /* Slide Container */
+        #presentation-container {
+            width: 100%;
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background-color: #000;
+        }
+
+        .slide {
+            width: var(--slide-width);
+            height: var(--slide-height);
+            background-color: var(--bg-color);
+            position: absolute;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease-in-out;
+            transform-origin: center center;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .gold-line {
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #D4AF37, #fef08a, #D4AF37);
+            position: absolute;
+            top: 0;
+            left: 0;
+            box-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        .slide-header { padding: 25px 35px 10px; }
+
+        .logo-text {
+            color: var(--gold-color);
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-shadow: 0 0 8px var(--gold-glow);
+        }
+        .logo-text::before { content: '🏢'; font-size: 18px; }
+
+        .slide-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--white-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 12px;
+        }
+
+        .slide-date {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--gray-color);
+            background: rgba(255,255,255,0.05);
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .slide-content {
+            padding: 10px 35px 20px;
+            height: calc(100% - 105px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+            flex-grow: 0;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            overflow: hidden;
+            table-layout: fixed;
+        }
+
+        th {
+            background-color: #0F172A;
+            color: var(--gold-color);
+            font-size: 14px;
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 2px solid var(--gold-color);
+        }
+
+        td {
+            font-size: 13px;
+            padding: 8px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        tr:nth-child(even) td { background-color: var(--row-even); }
+        tr:nth-child(odd) td { background-color: var(--row-odd); }
+
+        .status-green { color: #4ade80; font-weight: 500; }
+        .status-yellow { color: #facc15; font-weight: 500; }
+        .status-red { 
+            color: #f87171; 
+            font-weight: 700; 
+            text-shadow: 0 0 6px rgba(248, 113, 113, 0.6);
+        }
+        .status-blue { color: #60a5fa; font-weight: 500; }
+        .status-gray { color: var(--gray-color); font-weight: 400; }
+
+        @keyframes sirenPulse {
+            0% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.6); }
+            50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.9); border-color: rgba(239, 68, 68, 1); }
+            100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.6); }
+        }
+
+        /* Summary Grid */
+        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px; flex-shrink: 0; }
+        .summary-card {
+            background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px; padding: 14px 16px; border-top: 3px solid var(--gold-color);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .summary-card.alert-active {
+            animation: sirenPulse 2s infinite;
+            border-top-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+        .summary-title { font-size: 13px; color: var(--gray-color); margin-bottom: 4px; }
+        .summary-value { font-size: 32px; font-weight: 700; color: var(--white-color); }
+        .summary-sub { font-size: 12px; color: var(--gold-color); margin-top: 2px; }
+
+        .bottom-section { display: flex; gap: 15px; flex: 1; min-height: 0; }
+        
+        .alert-box {
+            flex: 1; background: rgba(220, 38, 38, 0.12); border-left: 4px solid #ef4444; 
+            padding: 14px 18px; border-radius: 0 8px 8px 0; display: flex; flex-direction: column; 
+            min-height: 0; border-top: 1px solid rgba(239, 68, 68, 0.2); border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .alert-title { color: #fca5a5; font-size: 15px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .alert-content { flex: 1; overflow-y: auto; padding-right: 5px; }
+        .alert-item { font-size: 14px; margin-bottom: 6px; padding-left: 15px; position: relative; }
+        .alert-item::before { content: '•'; color: #ef4444; position: absolute; left: 0; font-weight: bold; }
+
+        .chart-box {
+            background: var(--panel-bg); border-radius: 8px; 
+            border: 1px solid rgba(255,255,255,0.08); padding: 14px; 
+            border-top: 3px solid var(--gold-color); display: flex; flex-direction: column; 
+            min-height: 0; flex-shrink: 0;
+        }
+        .chart-title { font-size: 14px; color: var(--gray-color); margin-bottom: 4px; text-align: left; flex-shrink: 0; font-weight: 600; }
+        .chart-container-inner { flex: 1; position: relative; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; }
+
+        /* Map Container & Dark Filter */
+        #map-container {
+            width: 100%; height: 100%; border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.12); overflow: hidden; z-index: 1;
+            background: #0b0f19;
+        }
+        
+        .leaflet-tile-pane {
+            filter: invert(100%) hue-rotate(195deg) brightness(85%) contrast(140%) saturate(80%);
+        }
+
+        .leaflet-popup-content-wrapper { background: #111827 !important; color: #FFFFFF !important; border: 1px solid var(--gold-color); border-radius: 8px !important; }
+        .leaflet-popup-tip { background: var(--gold-color) !important; }
+
+        .custom-map-pin-red {
+            animation: sirenPulse 1.2s infinite;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Control Panel -->
+    <div id="tv-controls">
+        <div class="control-group">
+            <span style="color: var(--gold-color); font-weight: bold; margin-right: 10px; font-size: 15px;">DTRUSS COMMAND CENTER</span>
+            <div class="digital-clock" id="live-digital-clock">00:00:00</div>
+            <button id="btn-morning" class="active-mode">☀️ รอบเช้า</button>
+            <button id="btn-afternoon">🌙 รอบบ่าย (อัปเดต)</button>
+        </div>
+        <div class="control-group">
+            <button id="btn-sync" class="btn-sync">🔄 อัปเดตข้อมูล Sheets</button>
+            <button id="btn-play" class="btn-play">▶ เล่นสไลด์วนทีวี (20s)</button>
+            <button id="btn-prev">❮</button>
+            <span class="slide-counter"><span id="current-slide">1</span> / <span id="total-slides">1</span></span>
+            <button id="btn-next">❯</button>
+            <button id="btn-fullscreen" class="btn-fullscreen">🖥️ เต็มจอ</button>
+        </div>
+    </div>
+
+    <!-- Presentation Area -->
+    <div id="presentation-container">
+        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--gold-color); font-size: 22px;">
+            ⏳ กำลังโหลดข้อมูลระบบปฏิบัติการ Dtruss Elevator...
+        </div>
+    </div>
+
+    <!-- Live Ticker Bar Bottom -->
+    <div id="ticker-bar">
+        <div class="ticker-label">🚨 LIVE BROADCAST</div>
+        <div class="ticker-wrap">
+            <div class="ticker-text" id="ticker-content">🏢 DTRUSS ELEVATOR OPERATIONS COMMAND CENTER • REAL-TIME MONITORING SYSTEM • ระบบกำลังเชื่อมต่อข้อมูล...</div>
+        </div>
+    </div>
+
+    <script>
+        const GOOGLE_SHEET_ID = '17dvKbWwet_DhvUpva6xc8WfubgAMBw2fT0hBYvD_6bk';
+        const MAX_ROWS_PER_PAGE = 10;
+
+        // Static YTD Data (ม.ค. - ก.ย. 2569)
+        const ytdMonthlyData = [
+            { month: 'มกราคม', calls: 311, door: 96, stuck: 73, trapped: 5 },
+            { month: 'กุมภาพันธ์', calls: 274, door: 74, stuck: 67, trapped: 11 },
+            { month: 'มีนาคม', calls: 348, door: 111, stuck: 79, trapped: 16 },
+            { month: 'เมษายน', calls: 285, door: 108, stuck: 44, trapped: 22 },
+            { month: 'พฤษภาคม', calls: 343, door: 92, stuck: 67, trapped: 23 },
+            { month: 'มิถุนายน', calls: 308, door: 82, stuck: 68, trapped: 26 },
+            { month: 'กรกฎาคม', calls: 299, door: 75, stuck: 59, trapped: 20 },
+            { month: 'สิงหาคม', calls: 282, door: 90, stuck: 56, trapped: 12 },
+            { month: 'กันยายน', calls: 103, door: 45, stuck: 27, trapped: 5 }
+        ];
+
+        const ytdCategoryData = [
+            { category: 'ระบบประตู (ประตูเปิด-ปิดค้าง / เซนเซอร์)', count: 773, pct: 30.28, color: '#f59e0b' },
+            { category: 'การแจ้งซ่อมทั่วไป (ไม่ระบุรายละเอียด)', count: 667, pct: 26.13, color: '#3b82f6' },
+            { category: 'ลิฟต์ค้าง / มีคนติดค้างในลิฟต์', count: 540, pct: 21.15, color: '#ef4444' },
+            { category: 'ระบบควบคุม / ปุ่มกด / บอร์ด ARD', count: 242, pct: 9.48, color: '#8b5cf6' },
+            { category: 'ระบบกลไกและการเคลื่อนที่ (เสียงดัง/สั่น)', count: 220, pct: 8.62, color: '#10b981' },
+            { category: 'ระบบไฟฟ้าหลัก / เบรกเกอร์ทริป / ไฟตก', count: 78, pct: 3.06, color: '#ec4899' },
+            { category: 'ปัจจัยภายนอก (น้ำเข้าปล่อง / เศษขยะ)', count: 33, pct: 1.29, color: '#64748b' }
+        ];
+
+        const ytdTopProjects = [
+            { project: 'บริษัทเอสติวัล', calls: 66, door: 31, stuck: 13, trapped: 0, status: '🟡 เฝ้าระวังประตู', color: 'yellow' },
+            { project: 'โรงพยาบาลปทุมธานี', calls: 63, door: 26, stuck: 6, trapped: 3, status: '🟡 เฝ้าระวังบอร์ดควบคุม', color: 'yellow' },
+            { project: 'แกรนด์ปาร์คทาวน์', calls: 51, door: 4, stuck: 25, trapped: 10, status: '🚨 เสี่ยงสูง (คนติดค้างสูงสุด)', color: 'red' },
+            { project: 'เมืองทองบางนา', calls: 49, door: 7, stuck: 24, trapped: 4, status: '🔴 เฝ้าระวังลิฟต์ค้าง', color: 'red' },
+            { project: 'Ds2', calls: 42, door: 20, stuck: 13, trapped: 4, status: '🟡 เฝ้าระวังประตู/ค้าง', color: 'yellow' },
+            { project: 'เดอะมาสเตอร์ เซ็นเธรี่ยม', calls: 36, door: 9, stuck: 8, trapped: 0, status: '🟢 ปกติ', color: 'green' },
+            { project: 'โรงพยาบาลวชิระ', calls: 30, door: 9, stuck: 6, trapped: 0, status: '🟢 ปกติ', color: 'green' },
+            { project: 'โรงพยาบาลนพรัตน์', calls: 29, door: 3, stuck: 5, trapped: 0, status: '🔵 ติดตามระบบกลไก', color: 'blue' },
+            { project: 'บริษัทเฮนนี่เวย์', calls: 28, door: 5, stuck: 15, trapped: 0, status: '🟡 เฝ้าระวังลิฟต์ค้าง', color: 'yellow' },
+            { project: 'เมืองทองธานี T9', calls: 28, door: 5, stuck: 9, trapped: 2, status: '🟡 เฝ้าระวังไฟตก', color: 'yellow' }
+        ];
+
+        let dataTiw = [], dataPele = [], dataJet = [], dataNut = [], dataUpcountry = [], dataMgmt = [], dataRepair = [];
+        let currentMode = 'morning';
+        let currentSlide = 1;
+        let totalSlidesCount = 1;
+        let playInterval;
+        let isPlaying = false;
+        let isFetching = false;
+        let map = null, mapMarkers = [];
+        let workloadChart = null, ytdTrendChart = null, ytdCategoryChart = null; 
+
+        // Digital Clock
+        function updateDigitalClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('live-digital-clock').textContent = `${h}:${m}:${s}`;
+        }
+        setInterval(updateDigitalClock, 1000);
+        updateDigitalClock();
+
+        // Count-Up Animation
+        function animateNumberCount(id, targetVal) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            let current = 0;
+            const increment = Math.ceil(targetVal / 20) || 1;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= targetVal) {
+                    current = targetVal;
+                    clearInterval(timer);
+                }
+                el.childNodes[0].nodeValue = current + ' ';
+            }, 30);
+        }
+
+        function getStatusIcon(colorClass) {
+            if (colorClass === 'green') return '🟢 ';
+            if (colorClass === 'blue') return '🔵 ';
+            if (colorClass === 'yellow') return '🟡 ';
+            if (colorClass === 'red') return '🚨 ';
+            return '';
+        }
+
+        function parseTimeValue(val) {
+            if (!val || val === '-') return '-';
+            val = String(val).trim();
+            if (val.startsWith('Date(')) {
+                const matches = val.match(/\d+/g);
+                if (matches && matches.length >= 5) {
+                    const h = String(matches[3]).padStart(2, '0');
+                    const m = String(matches[4]).padStart(2, '0');
+                    return `${h}:${m}`;
+                }
+            }
+            return val;
+        }
+
+        function isRowNotEmpty(r) {
+            if (!r || r.length === 0) return false;
+            const col0 = r[0] ? String(r[0]).trim() : '';
+            const col1 = r[1] ? String(r[1]).trim() : '';
+            return (col0 !== '' && col0 !== '-') || (col1 !== '' && col1 !== '-');
+        }
+
+        function chunkArray(array, chunkSize) {
+            if (!array || array.length === 0) return [[]];
+            const results = [];
+            for (let i = 0; i < array.length; i += chunkSize) {
+                results.push(array.slice(i, i + chunkSize));
+            }
+            return results;
+        }
+
+        function fetchSheetTab(sheetName) {
+            return new Promise((resolve) => {
+                if (!GOOGLE_SHEET_ID) return resolve(null);
+                const callbackName = 'sheet_cb_' + Math.random().toString(36).substring(2, 9);
+                
+                const timeout = setTimeout(() => {
+                    if (window[callbackName]) {
+                        delete window[callbackName];
+                        if (script.parentNode) script.parentNode.removeChild(script);
+                        resolve(null);
+                    }
+                }, 15000); 
+
+                window[callbackName] = function(data) {
+                    clearTimeout(timeout);
+                    delete window[callbackName];
+                    if (script.parentNode) script.parentNode.removeChild(script);
+
+                    if (data && data.table && data.table.rows) {
+                        const rows = data.table.rows.map(row => 
+                            row.c ? row.c.map(cell => cell ? (cell.v !== null && cell.v !== undefined ? String(cell.v) : '') : '') : []
+                        );
+                        resolve(rows);
+                    } else { resolve(null); }
+                };
+
+                const script = document.createElement('script');
+                script.src = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(sheetName)}&tqx=responseHandler:${callbackName}`;
+                script.onerror = function() {
+                    clearTimeout(timeout);
+                    delete window[callbackName];
+                    if (script.parentNode) script.parentNode.removeChild(script);
+                    resolve(null);
+                };
+                document.body.appendChild(script);
+            });
+        }
+
+        function isHeaderRow(firstCell, headerKey) {
+            return firstCell && firstCell.toString().trim() === headerKey;
+        }
+
+        function parseTeamRows(rows, teamLabel) {
+            if (!rows || rows.length === 0) return [];
+            const startIndex = isHeaderRow(rows[0][0], 'ช่าง') ? 1 : 0;
+            return rows.slice(startIndex)
+                .filter(isRowNotEmpty)
+                .map(r => ({
+                    team: teamLabel,
+                    name: r[0] ? String(r[0]).trim() : '-',
+                    place: r[1] ? String(r[1]).trim() : '-',
+                    code: r[2] ? String(r[2]).trim() : '-',
+                    qty: r[3] ? String(r[3]).trim() : '-',
+                    contact: r[4] ? String(r[4]).trim() : '-',
+                    statusM: r[5] ? String(r[5]).trim() : '-',
+                    cM: (r[6] ? String(r[6]).trim() : 'green').toLowerCase(),
+                    statusA: r[7] ? String(r[7]).trim() : '-',
+                    cA: (r[8] ? String(r[8]).trim() : 'green').toLowerCase(),
+                    coords: r[9] ? String(r[9]).trim() : ''
+                }));
+        }
+
+        async function loadAllDataFromGoogleSheets() {
+            if (isFetching) return;
+            isFetching = true;
+
+            const btnSync = document.getElementById('btn-sync');
+            btnSync.innerHTML = '⏳ กำลังดึงข้อมูล...';
+            btnSync.disabled = true;
+
+            try {
+                const [tiwRows, peleRows, jetRows, nutRows, upcountryRows, mgmtRows, repairRows] = await Promise.all([
+                    fetchSheetTab('Tiw'), fetchSheetTab('Pele'), fetchSheetTab('Jet'),
+                    fetchSheetTab('Nut'), fetchSheetTab('Upcountry'),
+                    fetchSheetTab('Management'), fetchSheetTab('Breakdown')
+                ]);
+
+                if(tiwRows) dataTiw = parseTeamRows(tiwRows, 'ทีมทิว');
+                if(peleRows) dataPele = parseTeamRows(peleRows, 'ทีมเปเล่');
+                if(jetRows) dataJet = parseTeamRows(jetRows, 'ทีมเจ็ท');
+                if(nutRows) dataNut = parseTeamRows(nutRows, 'ทีมช่างนัท');
+                if(upcountryRows) dataUpcountry = parseTeamRows(upcountryRows, 'ช่างต่างจังหวัด');
+
+                if (mgmtRows && mgmtRows.length > 0) {
+                    const startIndex = isHeaderRow(mgmtRows[0][0], 'ผู้รับผิดชอบ') ? 1 : 0;
+                    dataMgmt = mgmtRows.slice(startIndex).filter(isRowNotEmpty).map(r => ({
+                        name: r[0] ? String(r[0]).trim() : '-',
+                        task: r[1] ? String(r[1]).trim() : '-',
+                        descM: r[2] ? String(r[2]).trim() : '-',
+                        descA: r[3] ? String(r[3]).trim() : '-'
+                    }));
+                }
+
+                if (repairRows && repairRows.length > 0) {
+                    const startIndex = isHeaderRow(repairRows[0][0], 'เวลาแจ้ง') ? 1 : 0;
+                    dataRepair = repairRows.slice(startIndex).filter(isRowNotEmpty).map(r => ({
+                        timeAlert: parseTimeValue(r[0]), place: r[1] ? String(r[1]).trim() : '-',
+                        issue: r[2] ? String(r[2]).trim() : '-', name: r[3] ? String(r[3]).trim() : '-',
+                        timeArrive: parseTimeValue(r[4]), timeFinish: parseTimeValue(r[5]),
+                        statusM: r[6] ? String(r[6]).trim() : '-', cM: (r[7] ? String(r[7]).trim() : 'gray').toLowerCase(),
+                        statusA: r[8] ? String(r[8]).trim() : '-', cA: (r[9] ? String(r[9]).trim() : 'gray').toLowerCase()
+                    }));
+                }
+
+                renderDynamicSlides();
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                btnSync.innerHTML = '🔄 อัปเดตข้อมูล Sheets';
+                btnSync.disabled = false;
+                isFetching = false;
+            }
+        }
+
+        function updatePieChart() {
+            const ctx = document.getElementById('teamPieChart');
+            if (!ctx) return;
+
+            const counts = [dataTiw.length, dataPele.length, dataJet.length, dataNut.length, dataUpcountry.length];
+            const labels = ['ทีมทิว', 'ทีมเปเล่', 'ทีมเจ็ท', 'ทีมช่างนัท', 'ต่างจังหวัด'];
+            const colors = ['#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899'];
+
+            if (workloadChart) { workloadChart.destroy(); }
+
+            Chart.defaults.color = '#94A3B8';
+            Chart.defaults.font.family = "'Prompt', sans-serif";
+
+            workloadChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: colors,
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%', 
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: '#FFF', font: { size: 13 }, boxWidth: 12, padding: 10 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderYTDCharts() {
+            const ctxTrend = document.getElementById('ytdTrendChart');
+            if (ctxTrend) {
+                if (ytdTrendChart) ytdTrendChart.destroy();
+                ytdTrendChart = new Chart(ctxTrend, {
+                    type: 'bar',
+                    data: {
+                        labels: ytdMonthlyData.map(d => d.month),
+                        datasets: [
+                            { label: 'รวมแจ้งซ่อม', data: ytdMonthlyData.map(d => d.calls), backgroundColor: '#3b82f6', borderRadius: 4 },
+                            { label: 'ปัญหาประตู', data: ytdMonthlyData.map(d => d.door), backgroundColor: '#f59e0b', borderRadius: 4 },
+                            { label: 'ลิฟต์ค้าง', data: ytdMonthlyData.map(d => d.stuck), backgroundColor: '#ef4444', borderRadius: 4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top', labels: { color: '#FFF', font: { size: 12 }, boxWidth: 12 } }
+                        },
+                        scales: {
+                            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94A3B8' } },
+                            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94A3B8' } }
+                        }
+                    }
+                });
+            }
+
+            const ctxCat = document.getElementById('ytdCategoryChart');
+            if (ctxCat) {
+                if (ytdCategoryChart) ytdCategoryChart.destroy();
+                ytdCategoryChart = new Chart(ctxCat, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ytdCategoryData.map(c => c.category),
+                        datasets: [{
+                            data: ytdCategoryData.map(c => c.count),
+                            backgroundColor: ytdCategoryData.map(c => c.color),
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '55%',
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { color: '#FFF', font: { size: 11 }, boxWidth: 10, padding: 8 }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderDynamicSlides() {
+            if (map) { map.remove(); map = null; mapMarkers = []; }
+
+            const container = document.getElementById('presentation-container');
+            container.innerHTML = '';
+            let slideIndex = 1;
+
+            const now = new Date();
+            const thDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+            const thMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+            const dateStr = `${thDays[now.getDay()]} ${now.getDate()} ${thMonths[now.getMonth()]} ${now.getFullYear() + 543}`;
+            const periodStr = currentMode === 'morning' ? 'เช้า' : 'บ่าย (อัปเดต)';
+
+            const totalField = dataTiw.length + dataPele.length + dataJet.length + dataNut.length + dataUpcountry.length;
+            const totalTasksAll = totalField + dataMgmt.length;
+            let repairActive = dataRepair.filter(r => r.place !== '-' && r.place !== '').length;
+
+            let alertItems = [];
+            let alertSummaryText = [];
+
+            [...dataTiw, ...dataPele, ...dataJet, ...dataNut, ...dataUpcountry].forEach(r => {
+                const col = currentMode === 'morning' ? r.cM : r.cA;
+                const stat = currentMode === 'morning' ? r.statusM : r.statusA;
+                if (col === 'red' || col === 'yellow') {
+                    alertItems.push(`<div class="alert-item">${r.name}: ${r.place} - <span class="status-${col}">${stat}</span></div>`);
+                    alertSummaryText.push(`[${r.team}] ${r.name} @ ${r.place} (${stat})`);
+                }
+            });
+
+            // Live Ticker
+            const tickerEl = document.getElementById('ticker-content');
+            if (alertSummaryText.length > 0) {
+                tickerEl.innerHTML = `🚨 <b>รายการเฝ้าระวังด่วน (${alertSummaryText.length} เคส):</b> ${alertSummaryText.join('  •  ')}  •  🏢 DTRUSS COMMAND CENTER AUTOMATED MONITORING SYSTEM`;
+            } else {
+                tickerEl.innerHTML = `🟢 <b>สถานะระบบปกติ:</b> ไม่พบเคสเฝ้าระวังด่วนในขณะนี้  •  ภารกิจทั้งหมดประจำวัน: ${totalTasksAll} รายการ  •  📊 สถิติสะสม YTD 2569: แจ้งซ่อมรวม 2,553 ครั้ง  •  🏢 DTRUSS ELEVATOR COMMAND CENTER`;
+            }
+
+            // --- Slide 1: Executive Overview ---
+            const alertCardClass = alertItems.length > 0 ? 'summary-card alert-active' : 'summary-card';
+
+            container.innerHTML += `
+                <div class="slide" id="slide-${slideIndex}">
+                    <div class="gold-line"></div>
+                    <div class="slide-header">
+                        <div class="logo-text">DTRUSS ELEVATOR | Operations Command Center</div>
+                        <div class="slide-title">
+                            <span>EXECUTIVE OVERVIEW & DAILY KPI SUMMARY</span>
+                            <span class="slide-date">${dateStr} | ข้อมูลรอบ${periodStr}</span>
+                        </div>
+                    </div>
+                    <div class="slide-content">
+                        <div class="summary-grid">
+                            <div class="summary-card">
+                                <div class="summary-title">รวมภารกิจทั้งหมด</div>
+                                <div class="summary-value" id="kpi-total">${totalTasksAll} <span style="font-size:16px;font-weight:400">รายการ</span></div>
+                                <div class="summary-sub">งานสนาม ${totalField} / บริหาร ${dataMgmt.length}</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-title">ทีมปฏิบัติการสนาม (Active)</div>
+                                <div class="summary-value" id="kpi-teams">5 <span style="font-size:16px;font-weight:400">ทีม</span></div>
+                                <div class="summary-sub">ทิว, เปเล่, เจ็ท, นัท, ต่างจังหวัด</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-title">งานรับแจ้งซ่อมฉุกเฉิน</div>
+                                <div class="summary-value" id="kpi-repair">${repairActive} <span style="font-size:16px;font-weight:400">เคส</span></div>
+                                <div class="summary-sub">ข้อมูลแจ้งซ่อมประจำวัน</div>
+                            </div>
+                            <div class="${alertCardClass}">
+                                <div class="summary-title">รายการเฝ้าระวังด่วน (Alerts)</div>
+                                <div class="summary-value" style="color: ${alertItems.length > 0 ? '#ef4444' : '#4ade80'};" id="kpi-alerts">${alertItems.length} <span style="font-size:16px;font-weight:400">เคส</span></div>
+                                <div class="summary-sub">${alertItems.length > 0 ? 'ต้องติดตามความคืบหน้า' : 'สถานะปกติ'}</div>
+                            </div>
+                        </div>
+
+                        <div class="bottom-section">
+                            <div class="alert-box">
+                                <div class="alert-title">⚠️ Action Required (รายการต้องติดตามความคืบหน้า)</div>
+                                <div class="alert-content">
+                                    ${alertItems.length > 0 ? alertItems.join('') : '<div class="alert-item status-green" style="margin-top:10px;">🟢 ทุกรายการอยู่ในสภาวะปกติ</div>'}
+                                </div>
+                            </div>
+                            <div class="chart-box" style="width: 460px;">
+                                <div class="chart-title">สัดส่วนปริมาณงานตามทีม (วันนี้)</div>
+                                <div class="chart-container-inner">
+                                    <canvas id="teamPieChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            slideIndex++;
+
+            // --- Slide 2: YTD Elevator Statistics ---
+            container.innerHTML += `
+                <div class="slide" id="slide-${slideIndex}">
+                    <div class="gold-line"></div>
+                    <div class="slide-header">
+                        <div class="logo-text">DTRUSS ELEVATOR | YTD Analytics & Performance Dashboard</div>
+                        <div class="slide-title">
+                            <span>YTD STATISTICAL OVERVIEW & INCIDENT CHARTS</span>
+                            <span class="slide-date">ข้อมูลสถิติสะสม ม.ค. - ก.ย. 2569</span>
+                        </div>
+                    </div>
+                    <div class="slide-content">
+                        <div class="summary-grid">
+                            <div class="summary-card">
+                                <div class="summary-title">ยอดแจ้งซ่อมสะสมรวม</div>
+                                <div class="summary-value" style="color:var(--gold-color)">2,553 <span style="font-size:16px;font-weight:400">ครั้ง</span></div>
+                                <div class="summary-sub">เฉลี่ย ~283 ครั้ง/เดือน</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-title">ปัญหาประตู (อันดับ 1)</div>
+                                <div class="summary-value" style="color:#facc15">773 <span style="font-size:16px;font-weight:400">ครั้ง</span></div>
+                                <div class="summary-sub">คิดเป็น 30.28% ของเคสทั้งหมด</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-title">เคสลิฟต์ค้าง / ขัดข้อง</div>
+                                <div class="summary-value" style="color:#60a5fa">540 <span style="font-size:16px;font-weight:400">ครั้ง</span></div>
+                                <div class="summary-sub">คิดเป็น 21.15% ของเคสทั้งหมด</div>
+                            </div>
+                            <div class="summary-card alert-active">
+                                <div class="summary-title">พบคนติดค้างสะสม</div>
+                                <div class="summary-value" style="color:#ef4444">140 <span style="font-size:16px;font-weight:400">ราย</span></div>
+                                <div class="summary-sub">สูงสุดเดือน มิ.ย. (26 ราย)</div>
+                            </div>
+                        </div>
+
+                        <div class="bottom-section">
+                            <div class="chart-box" style="flex: 1.2;">
+                                <div class="chart-title">📊 แนวโน้มการแจ้งซ่อมรายเดือน (ม.ค. - ก.ย. 2569)</div>
+                                <div class="chart-container-inner">
+                                    <canvas id="ytdTrendChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="chart-box" style="flex: 1;">
+                                <div class="chart-title">🍩 สัดส่วนหมวดหมู่อาการเสียสะสม</div>
+                                <div class="chart-container-inner">
+                                    <canvas id="ytdCategoryChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            slideIndex++;
+
+            // --- Slide 3: Top 10 High-Risk Projects ---
+            let projectRowsHTML = ytdTopProjects.map(p => `
+                <tr>
+                    <td style="font-weight:600; color:var(--white-color)">🏢 ${p.project}</td>
+                    <td style="font-weight:700; color:var(--gold-color)">${p.calls}</td>
+                    <td>${p.door}</td>
+                    <td>${p.stuck}</td>
+                    <td style="${p.trapped > 0 ? 'color:#ef4444; font-weight:700' : ''}">${p.trapped}</td>
+                    <td class="status-${p.color}">${p.status}</td>
+                </tr>
+            `).join('');
+
+            container.innerHTML += `
+                <div class="slide" id="slide-${slideIndex}">
+                    <div class="gold-line"></div>
+                    <div class="slide-header">
+                        <div class="logo-text">DTRUSS ELEVATOR | High-Risk Watchlist & Project Analytics</div>
+                        <div class="slide-title">
+                            <span>TOP 10 HIGH INCIDENT PROJECTS (โครงการเฝ้าระวังสูงสุด)</span>
+                            <span class="slide-date">ข้อมูลสถิติสะสม ม.ค. - ก.ย. 2569</span>
+                        </div>
+                    </div>
+                    <div class="slide-content">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%">ชื่อโครงการ</th>
+                                    <th style="width: 15%">แจ้งซ่อมรวม (ครั้ง)</th>
+                                    <th style="width: 15%">ปัญหาประตู (ครั้ง)</th>
+                                    <th style="width: 15%">ลิฟต์ค้าง (ครั้ง)</th>
+                                    <th style="width: 15%">พบคนติดค้าง (ราย)</th>
+                                    <th style="width: 15%">สถานะประเมินเฝ้าระวัง</th>
+                                </tr>
+                            </thead>
+                            <tbody>${projectRowsHTML}</tbody>
+                        </table>
+                    </div>
+                </div>`;
+            slideIndex++;
+
+            // --- Field Team Slides ---
+            const teams = [
+                { name: 'TEAM TIW (ทีมทิว)', data: dataTiw },
+                { name: 'TEAM PELE (ทีมเปเล่)', data: dataPele },
+                { name: 'TEAM JET (ทีมเจ็ท)', data: dataJet },
+                { name: 'TEAM NUT (ทีมช่างนัท)', data: dataNut },
+                { name: 'REGIONAL TEAM (ช่างต่างจังหวัด)', data: dataUpcountry }
+            ];
+
+            teams.forEach(t => {
+                const chunks = chunkArray(t.data, MAX_ROWS_PER_PAGE);
+                chunks.forEach((chunk, pageIdx) => {
+                    const pageText = chunks.length > 1 ? ` (หน้า ${pageIdx + 1}/${chunks.length})` : '';
+                    let tableRowsHTML = '';
+
+                    if (chunk.length === 0) {
+                        tableRowsHTML = '<tr><td colspan="6" style="text-align:center; color:var(--gray-color);">ไม่มีภารกิจ</td></tr>';
+                    } else {
+                        tableRowsHTML = chunk.map(r => {
+                            const stat = currentMode === 'morning' ? r.statusM : r.statusA;
+                            const col = currentMode === 'morning' ? r.cM : r.cA;
+                            return `<tr><td>${r.name}</td><td>${r.place}</td><td>${r.code}</td><td>${r.qty}</td><td>${r.contact}</td><td class="status-${col}">${getStatusIcon(col)}${stat}</td></tr>`;
+                        }).join('');
+                    }
+
+                    container.innerHTML += `
+                        <div class="slide" id="slide-${slideIndex}">
+                            <div class="gold-line"></div>
+                            <div class="slide-header">
+                                <div class="logo-text">DTRUSS ELEVATOR | Operations Command Center</div>
+                                <div class="slide-title">
+                                    <span>FIELD OPERATIONS: ${t.name}${pageText}</span>
+                                    <span class="slide-date">รวม ${t.data.length} ภารกิจ</span>
+                                </div>
+                            </div>
+                            <div class="slide-content">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 10%">ช่าง</th>
+                                            <th style="width: 25%">สถานที่ / โครงการ</th>
+                                            <th style="width: 10%">CODE</th>
+                                            <th style="width: 10%">จำนวนชั้น</th>
+                                            <th style="width: 20%">ผู้ติดต่อ</th>
+                                            <th style="width: 25%">สถานะ (${periodStr})</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${tableRowsHTML}</tbody>
+                                </table>
+                            </div>
+                        </div>`;
+                    slideIndex++;
+                });
+            });
+
+            // --- Management Slides ---
+            const mgmtChunks = chunkArray(dataMgmt, MAX_ROWS_PER_PAGE);
+            mgmtChunks.forEach((chunk, pageIdx) => {
+                const pageText = mgmtChunks.length > 1 ? ` (หน้า ${pageIdx + 1}/${mgmtChunks.length})` : '';
+                let mgmtRowsHTML = chunk.length > 0 ? chunk.map(r => 
+                    `<tr><td>${r.name}</td><td style="color:var(--gold-color);">${r.task}</td><td>${currentMode === 'morning' ? r.descM : r.descA}</td></tr>`
+                ).join('') : '<tr><td colspan="3" style="text-align:center; color:var(--gray-color);">ไม่มีภารกิจ</td></tr>';
+
+                container.innerHTML += `
+                    <div class="slide" id="slide-${slideIndex}">
+                        <div class="gold-line"></div>
+                        <div class="slide-header">
+                            <div class="logo-text">DTRUSS ELEVATOR | Operations Command Center</div>
+                            <div class="slide-title">
+                                <span>MANAGEMENT & SPECIAL PROJECTS (ทีมบริหารส่วนกลาง)${pageText}</span>
+                                <span class="slide-date">รวม ${dataMgmt.length} ท่าน / ภารกิจ</span>
+                            </div>
+                        </div>
+                        <div class="slide-content">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 20%">ผู้รับผิดชอบ</th>
+                                        <th style="width: 20%">ภารกิจหลัก</th>
+                                        <th style="width: 60%">รายละเอียดงาน (${periodStr})</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${mgmtRowsHTML}</tbody>
+                            </table>
+                        </div>
+                    </div>`;
+                slideIndex++;
+            });
+
+            // --- Breakdown Slides ---
+            const repairChunks = chunkArray(dataRepair, MAX_ROWS_PER_PAGE);
+            repairChunks.forEach((chunk, pageIdx) => {
+                const pageText = repairChunks.length > 1 ? ` (หน้า ${pageIdx + 1}/${repairChunks.length})` : '';
+                let repairRowsHTML = chunk.length > 0 ? chunk.map(r => {
+                    const stat = currentMode === 'morning' ? r.statusM : r.statusA;
+                    const col = currentMode === 'morning' ? r.cM : r.cA;
+                    return `<tr>
+                        <td>${r.timeAlert}</td>
+                        <td style="color:var(--white-color); font-weight: 500;">${r.place}</td>
+                        <td>${r.issue}</td>
+                        <td>${r.name}</td>
+                        <td>${r.timeArrive}</td>
+                        <td>${r.timeFinish}</td>
+                        <td class="status-${col}">${getStatusIcon(col)}${stat}</td>
+                    </tr>`;
+                }).join('') : '<tr><td colspan="7" style="text-align:center; color:var(--gray-color);">ไม่มีข้อมูลแจ้งซ่อม</td></tr>';
+
+                container.innerHTML += `
+                    <div class="slide" id="slide-${slideIndex}">
+                        <div class="gold-line"></div>
+                        <div class="slide-header">
+                            <div class="logo-text">DTRUSS ELEVATOR | Operations Command Center</div>
+                            <div class="slide-title">
+                                <span>ELEVATOR BREAKDOWN MONITORING (ระบบรับแจ้งซ่อมฉุกเฉิน)${pageText}</span>
+                                <span class="slide-date">อัปเดตข้อมูลล่าสุด (${periodStr})</span>
+                            </div>
+                        </div>
+                        <div class="slide-content">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 8%">เวลาแจ้ง</th>
+                                        <th style="width: 22%">ลูกค้า / สถานที่</th>
+                                        <th style="width: 22%">อาการเบื้องต้น</th>
+                                        <th style="width: 12%">ช่างรับงาน</th>
+                                        <th style="width: 9%">ถึงหน้างาน</th>
+                                        <th style="width: 9%">จบงาน</th>
+                                        <th style="width: 18%">สถานะการซ่อม (${periodStr})</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${repairRowsHTML}</tbody>
+                            </table>
+                        </div>
+                    </div>`;
+                slideIndex++;
+            });
+
+            // --- Slide Map / Location ---
+            container.innerHTML += `
+                <div class="slide" id="slide-${slideIndex}">
+                    <div class="gold-line"></div>
+                    <div class="slide-header">
+                        <div class="logo-text">DTRUSS ELEVATOR | Operations Command Center</div>
+                        <div class="slide-title">
+                            <span>FIELD OPERATIONS MAP (แผนที่ตำแหน่งงานปฏิบัติการ)</span>
+                            <span class="slide-date">อ้างอิงพิกัดจากโครงการประจำวัน</span>
+                        </div>
+                    </div>
+                    <div class="slide-content">
+                        <div id="map-container"></div>
+                    </div>
+                </div>`;
+
+            totalSlidesCount = slideIndex; 
+            document.getElementById('total-slides').textContent = totalSlidesCount;
+            
+            updatePieChart();
+            renderYTDCharts();
+
+            if (currentSlide > totalSlidesCount) currentSlide = 1;
+            showSlide(currentSlide);
+            scalePresentation();
+        }
+
+        // Leaflet Map Initialization
+        function initMap() {
+            const mapEl = document.getElementById('map-container');
+            if (!mapEl || map) return;
+            map = L.map('map-container').setView([13.7563, 100.5018], 8);
+            
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 19,
+                attribution: 'Tiles &copy; Esri'
+            }).addTo(map);
+        }
+
+        function createPinIcon(color) {
+            let colorHex = '#4ade80';
+            let extraClass = '';
+            if (color === 'blue') colorHex = '#60a5fa';
+            if (color === 'yellow') colorHex = '#facc15';
+            if (color === 'red') {
+                colorHex = '#ef4444';
+                extraClass = 'custom-map-pin-red';
+            }
+            if (color === 'gray') colorHex = '#94A3B8';
+
+            return L.divIcon({
+                className: `custom-map-pin ${extraClass}`,
+                html: `<div style="background-color: ${colorHex}; width: 22px; height: 22px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 12px ${colorHex};"></div>`,
+                iconSize: [22, 22], iconAnchor: [11, 11], popupAnchor: [0, -12]
+            });
+        }
+
+        function updateMapMarkers() {
+            if (!map) return;
+            mapMarkers.forEach(m => map.removeLayer(m));
+            mapMarkers = [];
+
+            const allTeamData = [...dataTiw, ...dataPele, ...dataJet, ...dataNut, ...dataUpcountry];
+            const bounds = [];
+
+            allTeamData.forEach(item => {
+                if (item.coords && item.coords.includes(',')) {
+                    const parts = item.coords.split(',');
+                    const lat = parseFloat(parts[0]);
+                    const lng = parseFloat(parts[1]);
+
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        const col = currentMode === 'morning' ? item.cM : item.cA;
+                        const stat = currentMode === 'morning' ? item.statusM : item.statusA;
+
+                        const popupHTML = `
+                            <div style="font-family:'Prompt',sans-serif; color:#fff; font-size:13px; line-height:1.5; padding:5px;">
+                                <strong style="font-size:15px; color:var(--gold-color);">🏢 ${item.place}</strong><br>
+                                <b>ทีม:</b> ${item.team} (${item.name})<br>
+                                <b>CODE:</b> ${item.code} (${item.qty} ชั้น)<br>
+                                <b>ผู้ติดต่อ:</b> ${item.contact}<br>
+                                <b>สถานะ:</b> ${getStatusIcon(col)} ${stat}
+                            </div>`;
+
+                        const marker = L.marker([lat, lng], { icon: createPinIcon(col) }).addTo(map).bindPopup(popupHTML);
+                        mapMarkers.push(marker);
+                        bounds.push([lat, lng]);
+                    }
+                }
+            });
+
+            if (bounds.length > 0) { map.fitBounds(bounds, { padding: [50, 50] }); }
+        }
+
+        // Slide Navigation
+        function showSlide(n) {
+            document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+            const targetSlide = document.getElementById('slide-' + n);
+            if (targetSlide) targetSlide.classList.add('active');
+            document.getElementById('current-slide').textContent = n;
+
+            if (n === 1) {
+                const totalField = dataTiw.length + dataPele.length + dataJet.length + dataNut.length + dataUpcountry.length;
+                let repairActive = dataRepair.filter(r => r.place !== '-' && r.place !== '').length;
+                let alertCount = [...dataTiw, ...dataPele, ...dataJet, ...dataNut, ...dataUpcountry].filter(r => {
+                    const col = currentMode === 'morning' ? r.cM : r.cA;
+                    return col === 'red' || col === 'yellow';
+                }).length;
+
+                animateNumberCount('kpi-total', totalField + dataMgmt.length);
+                animateNumberCount('kpi-teams', 5);
+                animateNumberCount('kpi-repair', repairActive);
+                animateNumberCount('kpi-alerts', alertCount);
+            }
+
+            if (n === totalSlidesCount) {
+                setTimeout(() => {
+                    initMap();
+                    if (map) {
+                        map.invalidateSize(true);
+                        updateMapMarkers();
+                    }
+                }, 400);
+            }
+        }
+
+        function nextSlide() { currentSlide = currentSlide >= totalSlidesCount ? 1 : currentSlide + 1; showSlide(currentSlide); }
+        function prevSlide() { currentSlide = currentSlide <= 1 ? totalSlidesCount : currentSlide - 1; showSlide(currentSlide); }
+
+        function togglePlay() {
+            const btn = document.getElementById('btn-play');
+            if (isPlaying) {
+                clearInterval(playInterval);
+                btn.innerHTML = '▶ เล่นสไลด์วนทีวี (20s)';
+                btn.classList.remove('playing');
+            } else {
+                playInterval = setInterval(nextSlide, 20000);
+                btn.innerHTML = '⏸ หยุดเล่นอัตโนมัติ';
+                btn.classList.add('playing');
+            }
+            isPlaying = !isPlaying;
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); }
+            else { if (document.exitFullscreen) document.exitFullscreen(); }
+        }
+
+        // Controls Event Listeners
+        document.getElementById('btn-next').addEventListener('click', nextSlide);
+        document.getElementById('btn-prev').addEventListener('click', prevSlide);
+        document.getElementById('btn-play').addEventListener('click', togglePlay);
+        document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
+        document.getElementById('btn-sync').addEventListener('click', loadAllDataFromGoogleSheets);
+
+        document.getElementById('btn-morning').addEventListener('click', (e) => {
+            currentMode = 'morning';
+            e.target.classList.add('active-mode');
+            document.getElementById('btn-afternoon').classList.remove('active-mode');
+            renderDynamicSlides();
+        });
+
+        document.getElementById('btn-afternoon').addEventListener('click', (e) => {
+            currentMode = 'afternoon';
+            e.target.classList.add('active-mode');
+            document.getElementById('btn-morning').classList.remove('active-mode');
+            renderDynamicSlides();
+        });
+
+        function scalePresentation() {
+            const container = document.getElementById('presentation-container');
+            const scale = Math.min(container.clientWidth / 1280, container.clientHeight / 680);
+            document.querySelectorAll('.slide').forEach(slide => slide.style.transform = `scale(${scale})`);
+        }
+        window.addEventListener('resize', scalePresentation);
+
+        // Initial Load
+        loadAllDataFromGoogleSheets();
+        setInterval(loadAllDataFromGoogleSheets, 300000);
+    </script>
+</body>
+</html>
