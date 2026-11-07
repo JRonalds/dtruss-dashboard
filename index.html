@@ -159,10 +159,17 @@
 
         .slide-header { padding: 25px 40px 10px; }
 
-        .sci-fi-logo {
-            height: 40px; filter: invert(1) hue-rotate(180deg) saturate(150%) brightness(1.4);
-            mix-blend-mode: screen; margin-right: 15px;
+        /* CSS SCI-FI LOGO (Replaces the broken image) */
+        .text-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px; font-weight: 900;
+            margin-right: 18px; padding-right: 15px;
+            display: flex; align-items: center; line-height: 1;
+            border-right: 2px solid rgba(0, 240, 255, 0.4);
         }
+        .logo-dt { color: #fff; text-shadow: 0 0 12px rgba(255,255,255,0.8); letter-spacing: 1px; }
+        .logo-russ { color: var(--cyan-glow); text-shadow: 0 0 15px var(--cyan-glow); letter-spacing: 2px; margin-left: 3px; }
+        
         .logo-wrapper { display: flex; align-items: center; margin-bottom: 5px; }
         .hud-subtitle { font-family: 'Share Tech Mono', monospace; color: rgba(0, 240, 255, 0.7); font-size: 13px; letter-spacing: 2px; }
 
@@ -189,7 +196,7 @@
         table {
             width: 100%; border-collapse: collapse; margin-top: 5px;
             border: 1px solid var(--panel-border); background: rgba(2, 6, 23, 0.4);
-            table-layout: fixed; /* บังคับความกว้างคอลัมน์ให้ตรงเป๊ะ */
+            table-layout: fixed;
         }
 
         th {
@@ -206,13 +213,25 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        /* Table Auto-height distribution for Top 15 */
-        .table-fullheight { height: 100%; flex-grow: 1; margin: 0; }
-        .table-fullheight th { font-size: 14px; padding: 8px 12px; }
-        .table-fullheight td { font-size: 14px; padding: 5px 12px; } /* Browser will auto scale row height evenly */
+        .table-fullheight { height: 100%; flex-grow: 1; margin: 0; display: flex; flex-direction: column; }
+        .table-fullheight thead { flex-shrink: 0; }
+        .table-fullheight tbody { flex-grow: 1; display: flex; flex-direction: column; justify-content: space-evenly; }
+        .table-fullheight tr { display: flex; width: 100%; }
+        .table-fullheight tbody tr { flex-grow: 1; }
+        .table-fullheight th, .table-fullheight td { 
+            display: flex; align-items: center; 
+            font-size: 13.5px; padding: 2px 12px;
+        }
+        
+        .col-1 { width: 30%; }
+        .col-2 { width: 14%; justify-content: center; }
+        .col-3 { width: 14%; justify-content: center; }
+        .col-4 { width: 14%; justify-content: center; }
+        .col-5 { width: 14%; justify-content: center; }
+        .col-6 { width: 14%; justify-content: flex-start; }
 
-        tr:nth-child(even) td { background-color: rgba(15, 23, 42, 0.4); }
-        tr:hover td { background-color: rgba(0, 240, 255, 0.15); color: #fff; }
+        tr:nth-child(even) { background-color: rgba(15, 23, 42, 0.4); }
+        tr:hover { background-color: rgba(0, 240, 255, 0.15); color: #fff; }
 
         /* HUD Status Indicators */
         .status-badge { font-family: 'Share Tech Mono', monospace; font-weight: bold; letter-spacing: 1px; }
@@ -316,7 +335,6 @@
         const GOOGLE_SHEET_ID = '17dvKbWwet_DhvUpva6xc8WfubgAMBw2fT0hBYvD_6bk';
         const MAX_ROWS_PER_PAGE = 10;
 
-        // ข้อมูลสถิติสะสม (ม.ค. - ต.ค. 2569) รวม 3,122
         const ytdMonthlyData = [
             { month: 'ม.ค.', calls: 311 }, { month: 'ก.พ.', calls: 274 },
             { month: 'มี.ค.', calls: 348 }, { month: 'เม.ย.', calls: 285 },
@@ -325,7 +343,6 @@
             { month: 'ก.ย.', calls: 346 }, { month: 'ต.ค.', calls: 326 }
         ];
 
-        // หมวดหมู่ปัญหา
         const ytdCategoryData = [
             { category: 'ปัญหาประตู & แจ้งทั่วไป', count: 2117, color: '#3b82f6' },
             { category: 'ลิฟต์ค้าง / มีคนติดค้าง', count: 629, color: '#ef4444' },
@@ -381,7 +398,6 @@
         let playInterval; let isPlaying = false; let isFetching = false;
         let map = null, mapMarkers = []; let workloadChart = null, ytdTrendChart = null, ytdCategoryChart = null; 
 
-        // --- ระบบ Auto Shift เช็คเวลา ---
         function updateDigitalClock() {
             const now = new Date();
             const h = String(now.getHours()).padStart(2, '0');
@@ -496,9 +512,12 @@
             finally { document.getElementById('btn-sync').innerHTML = 'SYNC DATA'; isFetching = false; }
         }
 
+        // --- CSS Text Logo (Replaces Image) ---
         const logoHeaderHTML = `
             <div class="logo-wrapper">
-                <img src="story-1.webp" alt="DTRUSS" class="sci-fi-logo">
+                <div class="text-logo">
+                    <span class="logo-dt">DT</span><span class="logo-russ">RUSS</span>
+                </div>
                 <span class="hud-subtitle">ระบบปฏิบัติการส่วนกลาง // OPERATIONS COMMAND CENTER</span>
             </div>
         `;
@@ -532,7 +551,7 @@
                     data: {
                         labels: ytdMonthlyData.map(d => d.month),
                         datasets: [{ 
-                            label: 'รวมแจ้งซ่อม (Calls)', data: ytdMonthlyData.map(d => d.calls), 
+                            label: 'รวมแจ้งซ่อม', data: ytdMonthlyData.map(d => d.calls), 
                             borderColor: '#00f0ff', backgroundColor: 'rgba(0, 240, 255, 0.1)',
                             fill: true, tension: 0.2, pointBackgroundColor: '#fff', pointBorderColor: '#00f0ff', pointRadius: 4
                         }]
@@ -583,7 +602,6 @@
                 }
             });
 
-            // Live Ticker
             const tickerEl = document.getElementById('ticker-content');
             if (alertSummaryText.length > 0) {
                 tickerEl.innerHTML = `⚠️ รายการเฝ้าระวังด่วน (${alertItems.length} เคส): ${alertSummaryText.join('  //  ')}  //  DTRUSS COMMAND CENTER AUTOMATED MONITORING SYSTEM`;
@@ -616,7 +634,7 @@
                                 <div class="summary-sub">ทิว, เปเล่, เจ็ท, นัท, ต่างจังหวัด</div>
                             </div>
                             <div class="summary-card">
-                                <div class="summary-title">เคสแจ้งซ่อมฉุกเฉิน</div>
+                                <div class="summary-title">แจ้งซ่อมฉุกเฉิน</div>
                                 <div class="summary-value" id="kpi-repair" style="color:var(--cyan-glow);">${repairActive}</div>
                                 <div class="summary-sub">จากบันทึกรับแจ้งซ่อมวันนี้</div>
                             </div>
@@ -692,12 +710,12 @@
 
             // --- Slide 3: SERVICE CALL RATE DASHBOARD ---
             let callRateRowsHTML = callRateTeams.map((t, idx) => `
-                <tr>
-                    <td style="text-align: center; color: var(--cyan-glow); font-family: 'Share Tech Mono', monospace;">[${String(idx + 1).padStart(2,'0')}]</td>
-                    <td style="font-weight:600; color:#fff">${t.team}</td>
-                    <td style="font-weight:700; color:${t.color}; font-size: 15.5px; font-family: 'Share Tech Mono', monospace; text-align:center;">${t.rate.toFixed(3)}</td>
-                    <td style="font-family: 'Share Tech Mono', monospace; text-align:center;">${t.calls}</td>
-                    <td style="font-family: 'Share Tech Mono', monospace; text-align:center;">${t.units}</td>
+                <tr style="display:flex; width:100%;">
+                    <td class="col-1" style="text-align: center; color: var(--cyan-glow); font-family: 'Share Tech Mono', monospace; width:10%;">[${String(idx + 1).padStart(2,'0')}]</td>
+                    <td class="col-2" style="font-weight:600; color:#fff; width:35%; justify-content:flex-start;">${t.team}</td>
+                    <td class="col-3" style="font-weight:700; color:${t.color}; font-size: 16px; font-family: 'Share Tech Mono', monospace; width:20%; justify-content:center;">${t.rate.toFixed(3)}</td>
+                    <td class="col-4" style="font-family: 'Share Tech Mono', monospace; width:15%; justify-content:center;">${t.calls}</td>
+                    <td class="col-5" style="font-family: 'Share Tech Mono', monospace; width:15%; justify-content:center;">${t.units}</td>
                 </tr>
             `).join('');
 
@@ -716,7 +734,7 @@
                             <div class="summary-card">
                                 <div class="summary-title">Call Rate เฉลี่ยรวมทั้งหมด</div>
                                 <div class="summary-value" style="color:#00f0ff">0.161</div>
-                                <div class="summary-sub">ภาพรวมทั้งระบบ (GLOBAL AVERAGE)</div>
+                                <div class="summary-sub">ภาพรวมทั้งระบบ (16.13%)</div>
                             </div>
                             <div class="summary-card">
                                 <div class="summary-title">สถานะผ่านเกณฑ์ (11 ทีม)</div>
@@ -731,19 +749,19 @@
                             <div class="summary-card alert-active">
                                 <div class="summary-title">ทีมที่เกินเกณฑ์ (ต้องปรับปรุง)</div>
                                 <div class="summary-value" style="color:#ef4444; font-size: 26px; padding-top:4px; font-family:'Prompt',sans-serif;">ทีมเปเล่</div>
-                                <div class="summary-sub">Call Rate สูงสุดที่ 0.317 (631 Calls)</div>
+                                <div class="summary-sub">Call Rate สูงสุดที่ 0.317 (631 แจ้งซ่อม)</div>
                             </div>
                         </div>
                         <div class="chart-box" style="flex:1; overflow:hidden;">
                             <div class="chart-title">อันดับ Call Rate รายทีม เรียงจากน้อยไปมาก (TEAM RANKING DIRECTORY)</div>
                             <table class="table-fullheight">
-                                <thead>
-                                    <tr>
+                                <thead style="display:flex; width:100%;">
+                                    <tr style="display:flex; width:100%;">
                                         <th style="width: 10%; text-align: center;">อันดับ</th>
                                         <th style="width: 35%">รายชื่อทีมปฏิบัติการ (SQUAD)</th>
-                                        <th style="width: 20%; text-align:center;">CALL RATE</th>
-                                        <th style="width: 15%; text-align:center;">แจ้งซ่อมรวม</th>
-                                        <th style="width: 15%; text-align:center;">จำนวนยูนิต</th>
+                                        <th style="width: 20%; justify-content:center;">CALL RATE</th>
+                                        <th style="width: 15%; justify-content:center;">แจ้งซ่อมรวม</th>
+                                        <th style="width: 15%; justify-content:center;">จำนวนยูนิต</th>
                                     </tr>
                                 </thead>
                                 <tbody>${callRateRowsHTML}</tbody>
@@ -755,18 +773,18 @@
 
             // --- Slide 4: PM KPI DASHBOARD ---
             let pmRowsHTML = pmTeams.map((t, idx) => `
-                <tr>
-                    <td style="text-align: center; color: var(--cyan-glow); font-family: 'Share Tech Mono', monospace;">[${String(idx + 1).padStart(2,'0')}]</td>
-                    <td style="font-weight:600; color:#fff">${t.team}</td>
-                    <td style="font-family: 'Share Tech Mono', monospace; text-align:center;">${t.units}</td>
-                    <td style="font-family: 'Share Tech Mono', monospace; text-align:center;">${t.sent} / ${t.total}</td>
-                    <td style="vertical-align: middle;">
+                <tr style="display:flex; width:100%;">
+                    <td style="text-align: center; color: var(--cyan-glow); font-family: 'Share Tech Mono', monospace; width:8%;">[${String(idx + 1).padStart(2,'0')}]</td>
+                    <td style="font-weight:600; color:#fff; width:25%; justify-content:flex-start;">${t.team}</td>
+                    <td style="font-family: 'Share Tech Mono', monospace; width:12%; justify-content:center;">${t.units}</td>
+                    <td style="font-family: 'Share Tech Mono', monospace; width:20%; justify-content:center;">${t.sent} / ${t.total}</td>
+                    <td style="width:25%; flex-direction:column; align-items:stretch; justify-content:center;">
                         <div style="display: flex; justify-content: space-between; font-family: 'Share Tech Mono', monospace; font-size:12.5px; margin-bottom: 2px;">
                             <span style="font-weight: 700; color: ${t.color}">${t.kpi.toFixed(2)}%</span>
                         </div>
                         <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${t.kpi}%; background-color: ${t.color};"></div></div>
                     </td>
-                    <td style="color: ${t.pending > 0 ? '#ef4444' : '#22c55e'}; font-weight: 700; font-family: 'Share Tech Mono', monospace; text-align:center;">${t.pending}</td>
+                    <td style="color: ${t.pending > 0 ? '#ef4444' : '#22c55e'}; font-weight: 700; font-family: 'Share Tech Mono', monospace; width:10%; justify-content:center;">${t.pending}</td>
                 </tr>
             `).join('');
 
@@ -783,48 +801,48 @@
                     <div class="slide-content">
                         <div class="summary-grid">
                             <div class="summary-card">
-                                <div class="summary-title">ความสำเร็จ KPI รวม</div>
+                                <div class="summary-title">ความสำเร็จ KPI รวม (OVERALL)</div>
                                 <div class="summary-value" style="color:#22c55e">91.41%</div>
                                 <div class="summary-sub">จำนวน 6 ทีมหลัก (1,316 ยูนิต)</div>
                             </div>
                             <div class="summary-card">
-                                <div class="summary-title">รอบที่ต้องส่งทั้งหมด</div>
+                                <div class="summary-title">รอบที่ต้องส่งทั้งหมด (REQUIRED)</div>
                                 <div class="summary-value" style="color:var(--cyan-glow)">6,322</div>
                                 <div class="summary-sub">อ้างอิงไฟล์เช็ก PM + DATA สัญญา</div>
                             </div>
                             <div class="summary-card">
-                                <div class="summary-title">ส่งเอกสารยืนยันแล้ว</div>
+                                <div class="summary-title">ส่งเอกสารยืนยันแล้ว (VERIFIED)</div>
                                 <div class="summary-value" style="color:#fff">5,779</div>
                                 <div class="summary-sub">รอบการตรวจเช็คที่ยืนยันสำเร็จ</div>
                             </div>
                             <div class="summary-card alert-active">
-                                <div class="summary-title">ค้างส่งเอกสาร</div>
+                                <div class="summary-title">ค้างส่งเอกสาร (PENDING)</div>
                                 <div class="summary-value" style="color:#ef4444">543</div>
-                                <div class="summary-sub">ต้องเร่งดำเนินการติดตาม</div>
+                                <div class="summary-sub">ACTION REQUIRED</div>
                             </div>
                         </div>
                         <div class="bottom-section">
                             <div class="chart-box" style="flex: 1;">
                                 <div class="chart-title">อันดับการส่ง PM รายทีม (กรุงเทพฯ และปริมณฑล)</div>
                                 <table class="table-fullheight">
-                                    <thead>
-                                        <tr>
+                                    <thead style="display:flex; width:100%;">
+                                        <tr style="display:flex; width:100%;">
                                             <th style="width: 8%; text-align: center;">อันดับ</th>
-                                            <th style="width: 25%">ชื่อทีม</th>
-                                            <th style="width: 12%; text-align:center;">ยูนิต</th>
-                                            <th style="width: 20%; text-align:center;">ส่ง / ต้องส่ง (รอบ)</th>
+                                            <th style="width: 25%">ชื่อทีม (SQUAD)</th>
+                                            <th style="width: 12%; justify-content:center;">ยูนิต</th>
+                                            <th style="width: 20%; justify-content:center;">ส่ง/ต้องส่ง</th>
                                             <th style="width: 25%">ความสำเร็จ KPI %</th>
-                                            <th style="width: 10%; text-align:center;">ค้างส่ง</th>
+                                            <th style="width: 10%; justify-content:center;">ค้างส่ง</th>
                                         </tr>
                                     </thead>
                                     <tbody>${pmRowsHTML}</tbody>
                                 </table>
                             </div>
                             <div class="chart-box" style="width: 320px; background: rgba(34, 197, 94, 0.05); border-top-color: #22c55e; box-shadow: inset 0 0 20px rgba(34, 197, 94, 0.1);">
-                                <div class="chart-title" style="color: #22c55e;">ทีมช่างต่างจังหวัด (ม.ค. - ส.ค.)</div>
+                                <div class="chart-title" style="color: #22c55e;">ช่างต่างจังหวัด (REGIONAL)</div>
                                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
                                     <div style="font-family:'Orbitron',sans-serif; font-size: 54px; font-weight: 700; color: #22c55e; text-shadow: 0 0 15px rgba(34,197,94,0.6); margin-bottom: 10px;">100%</div>
-                                    <div style="font-family:'Prompt',sans-serif; font-size: 16px; color: var(--cyan-glow); margin-bottom: 10px;">ส่งงานครบ 6,084 / 6,084 รอบ</div>
+                                    <div style="font-family:'Prompt',sans-serif; font-size: 16px; color: var(--cyan-glow); margin-bottom: 10px;">ส่งครบ 6,084 / 6,084 รอบ</div>
                                 </div>
                             </div>
                         </div>
@@ -834,13 +852,13 @@
 
             // --- Slide 5: Top 15 High-Risk Projects ---
             let projectRowsHTML = ytdTopProjects.map((p, idx) => `
-                <tr>
-                    <td style="font-weight:600; color:#fff;">🏢 ${p.project}</td>
-                    <td style="font-family: 'Share Tech Mono', monospace; color:var(--cyan-glow); text-align:center; font-size:15.5px; font-weight:bold;">${p.calls}</td>
-                    <td style="text-align:center; font-family: 'Share Tech Mono', monospace;">${p.general}</td>
-                    <td style="text-align:center; font-family: 'Share Tech Mono', monospace;">${p.stuck}</td>
-                    <td style="text-align:center; font-family: 'Share Tech Mono', monospace; ${p.trapped > 0 ? 'color:#ef4444; font-weight:700;' : ''}">${p.trapped}</td>
-                    <td class="status-${p.color}" style="font-family: 'Share Tech Mono', monospace;">${p.status}</td>
+                <tr style="display:flex; width:100%;">
+                    <td class="col-1" style="font-weight:600; color:#fff; width:25%; justify-content:flex-start;">🏢 ${p.project}</td>
+                    <td class="col-2" style="font-family: 'Share Tech Mono', monospace; color:var(--cyan-glow); font-size:16px; font-weight:bold; width:15%; justify-content:center;">${p.calls}</td>
+                    <td class="col-3" style="font-family: 'Share Tech Mono', monospace; width:15%; justify-content:center;">${p.general}</td>
+                    <td class="col-4" style="font-family: 'Share Tech Mono', monospace; width:15%; justify-content:center;">${p.stuck}</td>
+                    <td class="col-5" style="font-family: 'Share Tech Mono', monospace; width:15%; justify-content:center; ${p.trapped > 0 ? 'color:#ef4444; font-weight:700;' : ''}">${p.trapped}</td>
+                    <td class="col-6" style="font-family: 'Share Tech Mono', monospace; color:${p.color}; width:15%; justify-content:flex-start;">${p.status}</td>
                 </tr>
             `).join('');
 
@@ -856,14 +874,14 @@
                     </div>
                     <div class="slide-content">
                         <table class="table-fullheight">
-                            <thead>
-                                <tr>
-                                    <th style="width: 25%">ชื่อโครงการ / สถานที่</th>
-                                    <th style="width: 15%; text-align:center;">แจ้งซ่อมรวม</th>
-                                    <th style="width: 15%; text-align:center;">ประตู/ทั่วไป</th>
-                                    <th style="width: 15%; text-align:center;">ลิฟต์ค้าง</th>
-                                    <th style="width: 15%; text-align:center;">พบคนติดค้าง</th>
-                                    <th style="width: 15%">สถานะประเมิน (THREAT LEVEL)</th>
+                            <thead style="display:flex; width:100%;">
+                                <tr style="display:flex; width:100%;">
+                                    <th class="col-1" style="width:25%;">ชื่อโครงการ / สถานที่</th>
+                                    <th class="col-2" style="width:15%; justify-content:center;">แจ้งซ่อมรวม</th>
+                                    <th class="col-3" style="width:15%; justify-content:center;">ประตู/ทั่วไป</th>
+                                    <th class="col-4" style="width:15%; justify-content:center;">ลิฟต์ค้าง</th>
+                                    <th class="col-5" style="width:15%; justify-content:center;">พบคนติดค้าง</th>
+                                    <th class="col-6" style="width:15%; justify-content:flex-start;">สถานะ (THREAT LEVEL)</th>
                                 </tr>
                             </thead>
                             <tbody>${projectRowsHTML}</tbody>
@@ -886,17 +904,17 @@
                 chunks.forEach((chunk, pageIdx) => {
                     const pageText = chunks.length > 1 ? ` (หน้า ${pageIdx + 1}/${chunks.length})` : '';
                     let tableRowsHTML = chunk.length === 0 ? 
-                        '<tr><td colspan="6" style="text-align:center; color:var(--gray-color);">ไม่มีภารกิจในรอบนี้</td></tr>' : 
+                        '<tr style="display:flex; width:100%;"><td style="width:100%; justify-content:center; color:var(--gray-color);">ไม่มีภารกิจในรอบนี้ (NO ACTIVE DIRECTIVES)</td></tr>' : 
                         chunk.map(r => {
                             const stat = currentMode === 'morning' ? r.statusM : r.statusA;
                             const col = currentMode === 'morning' ? r.cM : r.cA;
-                            return `<tr>
-                                <td>${r.name}</td>
-                                <td style="color:#fff">${r.place}</td>
-                                <td style="font-family:'Share Tech Mono',monospace; color:var(--cyan-glow); text-align:center;">${r.code}</td>
-                                <td style="text-align:center; font-family:'Share Tech Mono',monospace;">${r.qty}</td>
-                                <td>${r.contact}</td>
-                                <td class="status-${col}">${getStatusIcon(col)}${stat}</td>
+                            return `<tr style="display:flex; width:100%;">
+                                <td style="width:10%; justify-content:flex-start;">${r.name}</td>
+                                <td style="width:25%; justify-content:flex-start; color:#fff;">${r.place}</td>
+                                <td style="width:10%; justify-content:center; font-family:'Share Tech Mono',monospace; color:var(--cyan-glow);">${r.code}</td>
+                                <td style="width:10%; justify-content:center; font-family:'Share Tech Mono',monospace;">${r.qty}</td>
+                                <td style="width:20%; justify-content:flex-start;">${r.contact}</td>
+                                <td style="width:25%; justify-content:flex-start;" class="status-${col}">${getStatusIcon(col)}${stat}</td>
                             </tr>`;
                         }).join('');
 
@@ -907,19 +925,19 @@
                                 ${logoHeaderHTML}
                                 <div class="slide-title">
                                     <span>รายงานปฏิบัติการภาคสนาม: ${t.name}${pageText}</span>
-                                    <span class="slide-date">ภารกิจที่รับผิดชอบ: ${t.data.length} รายการ</span>
+                                    <span class="slide-date">ACTIVE TASKS: ${t.data.length}</span>
                                 </div>
                             </div>
                             <div class="slide-content">
                                 <table class="table-fullheight">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 12%">ชื่อช่าง (OP.)</th>
+                                    <thead style="display:flex; width:100%;">
+                                        <tr style="display:flex; width:100%;">
+                                            <th style="width: 10%">ชื่อช่าง (OP.)</th>
                                             <th style="width: 25%">สถานที่ / โครงการ</th>
-                                            <th style="width: 10%; text-align:center;">รหัส CODE</th>
-                                            <th style="width: 10%; text-align:center;">จำนวนชั้น</th>
+                                            <th style="width: 10%; justify-content:center;">รหัส CODE</th>
+                                            <th style="width: 10%; justify-content:center;">จำนวนชั้น</th>
                                             <th style="width: 20%">ผู้ติดต่อ</th>
-                                            <th style="width: 23%">สถานะ (${periodStr})</th>
+                                            <th style="width: 25%">สถานะ (${periodStr})</th>
                                         </tr>
                                     </thead>
                                     <tbody>${tableRowsHTML}</tbody>
@@ -935,12 +953,12 @@
             mgmtChunks.forEach((chunk, pageIdx) => {
                 const pageText = mgmtChunks.length > 1 ? ` (หน้า ${pageIdx + 1}/${mgmtChunks.length})` : '';
                 let mgmtRowsHTML = chunk.length > 0 ? chunk.map(r => 
-                    `<tr>
-                        <td>${r.name}</td>
-                        <td style="color:var(--cyan-glow);">${r.task}</td>
-                        <td style="color:#fff;">${currentMode === 'morning' ? r.descM : r.descA}</td>
+                    `<tr style="display:flex; width:100%;">
+                        <td style="width:20%; justify-content:flex-start;">${r.name}</td>
+                        <td style="width:20%; justify-content:flex-start; color:var(--cyan-glow);">${r.task}</td>
+                        <td style="width:60%; justify-content:flex-start; color:#fff;">${currentMode === 'morning' ? r.descM : r.descA}</td>
                     </tr>`
-                ).join('') : '<tr><td colspan="3" style="text-align:center; color:var(--gray-color);">ไม่มีภารกิจในรอบนี้</td></tr>';
+                ).join('') : '<tr style="display:flex; width:100%;"><td style="width:100%; justify-content:center; color:var(--gray-color);">ไม่มีภารกิจในรอบนี้</td></tr>';
 
                 container.innerHTML += `
                     <div class="slide" id="slide-${slideIndex}">
@@ -949,13 +967,13 @@
                             ${logoHeaderHTML}
                             <div class="slide-title">
                                 <span>รายงานทีมบริหารส่วนกลาง (MANAGEMENT & SPECIAL PROJECTS)${pageText}</span>
-                                <span class="slide-date">ผู้ปฏิบัติงาน: ${dataMgmt.length} ท่าน</span>
+                                <span class="slide-date">ACTIVE PERSONNEL: ${dataMgmt.length}</span>
                             </div>
                         </div>
                         <div class="slide-content">
                             <table class="table-fullheight">
-                                <thead>
-                                    <tr>
+                                <thead style="display:flex; width:100%;">
+                                    <tr style="display:flex; width:100%;">
                                         <th style="width: 20%">ผู้รับผิดชอบ (OFFICER)</th>
                                         <th style="width: 20%">ภารกิจหลัก (DIRECTIVE)</th>
                                         <th style="width: 60%">รายละเอียดงาน (${periodStr})</th>
@@ -975,16 +993,16 @@
                 let repairRowsHTML = chunk.length > 0 ? chunk.map(r => {
                     const stat = currentMode === 'morning' ? r.statusM : r.statusA;
                     const col = currentMode === 'morning' ? r.cM : r.cA;
-                    return `<tr>
-                        <td style="font-family:'Share Tech Mono',monospace; text-align:center;">${r.timeAlert}</td>
-                        <td style="color:#fff; font-weight: 500;">${r.place}</td>
-                        <td style="color:var(--cyan-glow);">${r.issue}</td>
-                        <td>${r.name}</td>
-                        <td style="font-family:'Share Tech Mono',monospace; text-align:center;">${r.timeArrive}</td>
-                        <td style="font-family:'Share Tech Mono',monospace; text-align:center;">${r.timeFinish}</td>
-                        <td class="status-${col}">${getStatusIcon(col)}${stat}</td>
+                    return `<tr style="display:flex; width:100%;">
+                        <td style="width:8%; justify-content:center; font-family:'Share Tech Mono',monospace;">${r.timeAlert}</td>
+                        <td style="width:22%; justify-content:flex-start; color:#fff; font-weight: 500;">${r.place}</td>
+                        <td style="width:22%; justify-content:flex-start; color:var(--cyan-glow);">${r.issue}</td>
+                        <td style="width:12%; justify-content:flex-start;">${r.name}</td>
+                        <td style="width:9%; justify-content:center; font-family:'Share Tech Mono',monospace;">${r.timeArrive}</td>
+                        <td style="width:9%; justify-content:center; font-family:'Share Tech Mono',monospace;">${r.timeFinish}</td>
+                        <td style="width:18%; justify-content:flex-start;" class="status-${col}">${getStatusIcon(col)}${stat}</td>
                     </tr>`;
-                }).join('') : '<tr><td colspan="7" style="text-align:center; color:var(--gray-color);">ไม่พบข้อมูลแจ้งซ่อมฉุกเฉินในขณะนี้</td></tr>';
+                }).join('') : '<tr style="display:flex; width:100%;"><td style="width:100%; justify-content:center; color:var(--gray-color);">ไม่พบข้อมูลแจ้งซ่อมฉุกเฉินในขณะนี้ (NO BREAKDOWN REPORTS)</td></tr>';
 
                 container.innerHTML += `
                     <div class="slide" id="slide-${slideIndex}">
@@ -993,19 +1011,19 @@
                             ${logoHeaderHTML}
                             <div class="slide-title">
                                 <span>ระบบรับแจ้งซ่อมฉุกเฉิน (EMERGENCY BREAKDOWN MONITORING)${pageText}</span>
-                                <span class="slide-date">อัปเดตข้อมูลล่าสุด (${periodStr})</span>
+                                <span class="slide-date">LIVE TICKETS (${periodStr})</span>
                             </div>
                         </div>
                         <div class="slide-content">
                             <table class="table-fullheight">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 8%; text-align:center;">เวลาแจ้ง</th>
+                                <thead style="display:flex; width:100%;">
+                                    <tr style="display:flex; width:100%;">
+                                        <th style="width: 8%; justify-content:center;">เวลาแจ้ง</th>
                                         <th style="width: 22%">ลูกค้า / สถานที่</th>
                                         <th style="width: 22%">อาการเบื้องต้น</th>
                                         <th style="width: 12%">ช่างที่รับงาน</th>
-                                        <th style="width: 9%; text-align:center;">ถึงหน้างาน</th>
-                                        <th style="width: 9%; text-align:center;">แก้จบงาน</th>
+                                        <th style="width: 9%; justify-content:center;">ถึงหน้างาน</th>
+                                        <th style="width: 9%; justify-content:center;">แก้จบงาน</th>
                                         <th style="width: 18%">สถานะการซ่อม (${periodStr})</th>
                                     </tr>
                                 </thead>
@@ -1024,7 +1042,7 @@
                         ${logoHeaderHTML}
                         <div class="slide-title">
                             <span>แผนที่พิกัดปฏิบัติการ (TACTICAL OPERATIONS MAP)</span>
-                            <span class="slide-date">ระบุตำแหน่ง GPS เรียลไทม์ตามโครงการประจำวัน</span>
+                            <span class="slide-date">LIVE GPS TRACKING</span>
                         </div>
                     </div>
                     <div class="slide-content">
