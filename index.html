@@ -157,9 +157,9 @@
             position: absolute; top: 0; left: 0; box-shadow: 0 0 15px var(--cyan-glow), 0 0 5px #fff;
         }
 
-        .slide-header { padding: 25px 40px 10px; }
+        .slide-header { padding: 20px 40px 10px; }
 
-        /* CSS SCI-FI LOGO (Replaces the broken image) */
+        /* CSS SCI-FI LOGO (Replaces Image Entirely) */
         .text-logo {
             font-family: 'Orbitron', sans-serif;
             font-size: 32px; font-weight: 900;
@@ -398,6 +398,7 @@
         let playInterval; let isPlaying = false; let isFetching = false;
         let map = null, mapMarkers = []; let workloadChart = null, ytdTrendChart = null, ytdCategoryChart = null; 
 
+        // --- ระบบ Auto Shift เช็คเวลา ---
         function updateDigitalClock() {
             const now = new Date();
             const h = String(now.getHours()).padStart(2, '0');
@@ -512,7 +513,7 @@
             finally { document.getElementById('btn-sync').innerHTML = 'SYNC DATA'; isFetching = false; }
         }
 
-        // --- CSS Text Logo (Replaces Image) ---
+        // --- CSS Text Logo (Replaces Image Entirely) ---
         const logoHeaderHTML = `
             <div class="logo-wrapper">
                 <div class="text-logo">
@@ -604,9 +605,9 @@
 
             const tickerEl = document.getElementById('ticker-content');
             if (alertSummaryText.length > 0) {
-                tickerEl.innerHTML = `⚠️ รายการเฝ้าระวังด่วน (${alertItems.length} เคส): ${alertSummaryText.join('  //  ')}  //  DTRUSS COMMAND CENTER AUTOMATED MONITORING SYSTEM`;
+                tickerEl.innerHTML = `⚠️ รายการเฝ้าระวังด่วน (${alertItems.length}): ${alertSummaryText.join('  //  ')}  //  DTRUSS COMMAND CENTER AUTOMATED MONITORING SYSTEM`;
             } else {
-                tickerEl.innerHTML = `🟢 สถานะระบบปกติ: ไม่พบเคสเฝ้าระวังด่วนในขณะนี้  //  ภารกิจทั้งหมดประจำวัน: ${totalTasksAll} รายการ  //  สถิติสะสม YTD 2569: วิเคราะห์แจ้งซ่อมรวม 3,122 ครั้ง  //  DTRUSS COMMAND CENTER`;
+                tickerEl.innerHTML = `🟢 สถานะระบบปกติ: ไม่พบเคสเฝ้าระวังด่วนในขณะนี้  //  ภารกิจทั้งหมดประจำวัน: ${totalTasksAll}  //  สถิติสะสม YTD 2569: วิเคราะห์แจ้งซ่อมรวม 3,122  //  DTRUSS COMMAND CENTER`;
             }
 
             // --- Slide 1: Executive Overview ---
@@ -854,10 +855,10 @@
             let projectRowsHTML = ytdTopProjects.map((p, idx) => `
                 <tr style="display:flex; width:100%;">
                     <td class="col-1" style="font-weight:600; color:#fff; width:25%; justify-content:flex-start;">🏢 ${p.project}</td>
-                    <td class="col-2" style="font-family: 'Share Tech Mono', monospace; color:var(--cyan-glow); font-size:16px; font-weight:bold; width:15%; justify-content:center;">${p.calls}</td>
-                    <td class="col-3" style="font-family: 'Share Tech Mono', monospace; width:15%; justify-content:center;">${p.general}</td>
-                    <td class="col-4" style="font-family: 'Share Tech Mono', monospace; width:15%; justify-content:center;">${p.stuck}</td>
-                    <td class="col-5" style="font-family: 'Share Tech Mono', monospace; width:15%; justify-content:center; ${p.trapped > 0 ? 'color:#ef4444; font-weight:700;' : ''}">${p.trapped}</td>
+                    <td class="col-2" style="font-family: 'Share Tech Mono', monospace; color:var(--cyan-glow); text-align:center; font-size:15.5px; font-weight:bold; width:15%; justify-content:center;">${p.calls}</td>
+                    <td class="col-3" style="text-align:center; font-family: 'Share Tech Mono', monospace; width:15%; justify-content:center;">${p.general}</td>
+                    <td class="col-4" style="text-align:center; font-family: 'Share Tech Mono', monospace; width:15%; justify-content:center;">${p.stuck}</td>
+                    <td class="col-5" style="text-align:center; font-family: 'Share Tech Mono', monospace; width:15%; justify-content:center; ${p.trapped > 0 ? 'color:#ef4444; font-weight:700;' : ''}">${p.trapped}</td>
                     <td class="col-6" style="font-family: 'Share Tech Mono', monospace; color:${p.color}; width:15%; justify-content:flex-start;">${p.status}</td>
                 </tr>
             `).join('');
@@ -1002,7 +1003,7 @@
                         <td style="width:9%; justify-content:center; font-family:'Share Tech Mono',monospace;">${r.timeFinish}</td>
                         <td style="width:18%; justify-content:flex-start;" class="status-${col}">${getStatusIcon(col)}${stat}</td>
                     </tr>`;
-                }).join('') : '<tr style="display:flex; width:100%;"><td style="width:100%; justify-content:center; color:var(--gray-color);">ไม่พบข้อมูลแจ้งซ่อมฉุกเฉินในขณะนี้ (NO BREAKDOWN REPORTS)</td></tr>';
+                }).join('') : '<tr style="display:flex; width:100%;"><td style="width:100%; justify-content:center; color:var(--gray-color);">ไม่พบข้อมูลแจ้งซ่อมฉุกเฉินในขณะนี้</td></tr>';
 
                 container.innerHTML += `
                     <div class="slide" id="slide-${slideIndex}">
