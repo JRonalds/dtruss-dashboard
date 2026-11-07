@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dtruss Elevator - Command Center & YTD Analytics Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <title>Dtruss Elevator - Advanced Sci-Fi Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
     
     <!-- Leaflet.js Map Library -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -15,347 +15,265 @@
 
     <style>
         :root {
-            --bg-color: #070C1B;
-            --gold-color: #D4AF37;
-            --gold-glow: rgba(212, 175, 55, 0.4);
-            --white-color: #FFFFFF;
-            --gray-color: #94A3B8;
-            --panel-bg: #111827;
-            --row-even: #182238;
-            --row-odd: #0F172A;
+            --bg-color: #010409; 
+            --cyan-glow: #00f0ff;
+            --blue-glow: #3b82f6;
+            --alert-red: #ff2a2a;
+            --alert-yellow: #facc15;
+            --alert-green: #22c55e;
+            --panel-bg: rgba(7, 12, 25, 0.85);
+            --panel-border: rgba(0, 240, 255, 0.25);
+            --row-even: rgba(15, 23, 42, 0.5);
+            --row-odd: rgba(2, 6, 23, 0.5);
             --slide-width: 1280px;
-            --slide-height: 680px;
+            --slide-height: 720px;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Prompt', sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background-color: #000;
-            color: var(--white-color);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.05) 0%, transparent 60%),
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+            color: #e2e8f0;
+            overflow: hidden; 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
             height: 100vh;
+            font-family: 'Prompt', sans-serif;
         }
 
         /* Top Control Bar */
         #tv-controls {
-            width: 100%;
-            background: #0B1120;
-            padding: 8px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--gold-color);
-            box-shadow: 0 0 15px var(--gold-glow);
-            z-index: 1000;
-            flex-shrink: 0;
+            width: 100%; height: 50px;
+            background: rgba(2, 6, 23, 0.95);
+            padding: 0 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.5);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.15);
+            z-index: 1000; flex-shrink: 0;
         }
 
-        .control-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
+        .control-group { display: flex; gap: 15px; align-items: center; }
+
+        .system-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--cyan-glow); font-weight: 900; font-size: 17px;
+            letter-spacing: 3px; text-shadow: 0 0 10px var(--cyan-glow);
         }
 
         .digital-clock {
             font-family: 'Share Tech Mono', monospace;
-            font-size: 18px;
-            color: #38bdf8;
-            background: rgba(15, 23, 42, 0.8);
-            padding: 4px 12px;
-            border-radius: 4px;
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
-            letter-spacing: 1px;
-            margin-right: 15px;
+            font-size: 20px; color: #fff;
+            background: rgba(0, 240, 255, 0.1);
+            padding: 2px 15px; border-radius: 2px;
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            text-shadow: 0 0 10px var(--cyan-glow);
+            letter-spacing: 2px;
+            box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.2);
         }
 
         button {
-            padding: 6px 14px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            padding: 6px 16px;
+            background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.5);
+            color: #60a5fa; border-radius: 2px; cursor: pointer; font-size: 13px; font-weight: 500;
+            transition: all 0.3s; font-family: 'Prompt', sans-serif; letter-spacing: 1px;
         }
 
-        button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-
+        button:hover:not(:disabled) { background: rgba(59, 130, 246, 0.3); box-shadow: 0 0 12px rgba(59, 130, 246, 0.5); }
+        
         button.active-mode {
-            background: var(--gold-color);
-            color: #000;
-            border-color: var(--gold-color);
-            font-weight: 600;
-            box-shadow: 0 0 10px var(--gold-glow);
+            background: rgba(0, 240, 255, 0.2); color: #fff;
+            border-color: var(--cyan-glow); box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+            text-shadow: 0 0 5px #fff; pointer-events: none; 
         }
 
-        .btn-sync { background: #0284c7; border-color: #0369a1; }
-        .btn-sync:hover:not(:disabled) { background: #0369a1; }
-        .btn-play { background: #2563eb; border-color: #1d4ed8; }
-        .btn-play.playing { background: #dc2626; border-color: #b91c1c; animation: sirenPulse 1.5s infinite; }
-        .btn-fullscreen { background: #7c3aed; border-color: #6d28d9; }
+        .btn-play.playing { background: rgba(255, 42, 42, 0.2); border-color: var(--alert-red); color: #fff; animation: borderPulse 1.5s infinite; }
 
         .slide-counter {
-            background: rgba(0,0,0,0.6);
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 13px;
-            color: var(--gold-color);
-            font-weight: 600;
-            border: 1px solid rgba(212, 175, 55, 0.3);
+            font-family: 'Share Tech Mono', monospace;
+            background: rgba(0, 0, 0, 0.8); padding: 4px 15px; border-radius: 2px;
+            font-size: 14px; color: var(--cyan-glow); border: 1px solid var(--panel-border);
         }
 
         /* Bottom Live Ticker */
         #ticker-bar {
-            width: 100%;
-            height: 36px;
-            background: #030712;
-            border-top: 1px solid var(--gold-color);
-            display: flex;
-            align-items: center;
-            overflow: hidden;
-            z-index: 1000;
-            flex-shrink: 0;
-            position: relative;
+            width: 100%; height: 35px;
+            background: rgba(2, 6, 23, 0.95);
+            border-top: 1px solid rgba(0, 240, 255, 0.4);
+            display: flex; align-items: center; overflow: hidden;
+            z-index: 1000; flex-shrink: 0;
+            box-shadow: 0 -5px 15px rgba(0, 240, 255, 0.1);
         }
 
         .ticker-label {
-            background: #dc2626;
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 13px;
-            padding: 0 15px;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            z-index: 10;
-            box-shadow: 5px 0 10px rgba(0,0,0,0.5);
-            flex-shrink: 0;
-            animation: sirenPulse 2s infinite;
+            background: var(--alert-red); color: #fff;
+            font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px;
+            padding: 0 25px; height: 100%; display: flex; align-items: center;
+            box-shadow: 5px 0 20px rgba(255, 42, 42, 0.8);
+            z-index: 10; animation: bgPulse 2s infinite;
         }
 
-        .ticker-wrap {
-            width: 100%;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
+        .ticker-wrap { width: 100%; overflow: hidden; white-space: nowrap; }
         .ticker-text {
-            display: inline-block;
-            padding-left: 100%;
+            display: inline-block; padding-left: 100%;
             animation: marquee 30s linear infinite;
-            font-size: 14px;
-            color: #e2e8f0;
+            font-size: 14.5px; color: var(--cyan-glow); font-family: 'Prompt', sans-serif;
+            letter-spacing: 0.5px;
         }
 
-        @keyframes marquee {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(-100%, 0); }
-        }
+        @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+        @keyframes borderPulse { 0% { box-shadow: 0 0 5px rgba(255,42,42,0.4); } 50% { box-shadow: 0 0 20px rgba(255,42,42,0.9); } 100% { box-shadow: 0 0 5px rgba(255,42,42,0.4); } }
+        @keyframes bgPulse { 0% { background: #ff2a2a; } 50% { background: #cc0000; } 100% { background: #ff2a2a; } }
+        @keyframes textBlink { 0%, 100% { opacity: 1; text-shadow: 0 0 10px rgba(255,42,42,0.9); } 50% { opacity: 0.5; } }
 
         /* Slide Container */
         #presentation-container {
-            width: 100%;
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            background-color: #000;
+            width: 100%; flex-grow: 1;
+            display: flex; justify-content: center; align-items: center;
+            position: relative; overflow: hidden;
         }
 
         .slide {
-            width: var(--slide-width);
-            height: var(--slide-height);
-            background-color: var(--bg-color);
-            position: absolute;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.5s ease-in-out;
-            transform-origin: center center;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
-            border: 1px solid rgba(255,255,255,0.05);
+            width: var(--slide-width); height: var(--slide-height);
+            background: radial-gradient(circle at center, #0a1128 0%, #010409 100%);
+            position: absolute; opacity: 0; visibility: hidden;
+            transition: opacity 0.5s ease-in-out; transform-origin: center center;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.9), inset 0 0 50px rgba(0, 240, 255, 0.05);
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+        }
+        .slide.active { opacity: 1; visibility: visible; }
+        .slide::after {
+            content: ''; position: absolute; bottom: 0; right: 0; width: 20px; height: 20px;
+            background: rgba(0, 240, 255, 0.5); box-shadow: 0 0 15px var(--cyan-glow);
         }
 
-        .slide.active {
-            opacity: 1;
-            visibility: visible;
+        .laser-line {
+            width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cyan-glow), #fff, var(--cyan-glow), transparent);
+            position: absolute; top: 0; left: 0; box-shadow: 0 0 15px var(--cyan-glow), 0 0 5px #fff;
         }
 
-        .gold-line {
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #D4AF37, #fef08a, #D4AF37);
-            position: absolute;
-            top: 0;
-            left: 0;
-            box-shadow: 0 0 10px var(--gold-glow);
-        }
+        .slide-header { padding: 25px 40px 10px; }
 
-        .slide-header { padding: 25px 35px 10px; }
-
-        .logo-text {
-            color: var(--gold-color);
-            font-size: 15px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-shadow: 0 0 8px var(--gold-glow);
+        .sci-fi-logo {
+            height: 40px; filter: invert(1) hue-rotate(180deg) saturate(150%) brightness(1.4);
+            mix-blend-mode: screen; margin-right: 15px;
         }
-        .logo-text::before { content: '🏢'; font-size: 18px; }
+        .logo-wrapper { display: flex; align-items: center; margin-bottom: 5px; }
+        .hud-subtitle { font-family: 'Share Tech Mono', monospace; color: rgba(0, 240, 255, 0.7); font-size: 13px; letter-spacing: 2px; }
 
         .slide-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--white-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 12px;
+            font-size: 24px; font-weight: 700; color: #fff;
+            display: flex; justify-content: space-between; align-items: flex-end;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+            padding-bottom: 8px; text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
         }
 
         .slide-date {
-            font-size: 14px;
-            font-weight: 400;
-            color: var(--gray-color);
-            background: rgba(255,255,255,0.05);
-            padding: 5px 14px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.1);
+            font-family: 'Share Tech Mono', monospace; font-size: 14px; color: var(--cyan-glow);
+            background: rgba(0, 240, 255, 0.1); padding: 2px 12px; border-radius: 2px;
+            border: 1px solid rgba(0, 240, 255, 0.3);
         }
 
         .slide-content {
-            padding: 10px 35px 20px;
-            height: calc(100% - 105px);
-            display: flex;
-            flex-direction: column;
+            padding: 10px 40px 20px; 
+            height: calc(100% - 95px);
+            display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* Tables */
+        /* Sci-Fi Tables (Standard Layout for Perfect Alignment) */
         table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 5px;
-            flex-grow: 0;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 8px;
-            overflow: hidden;
-            table-layout: fixed;
+            width: 100%; border-collapse: collapse; margin-top: 5px;
+            border: 1px solid var(--panel-border); background: rgba(2, 6, 23, 0.4);
+            table-layout: fixed; /* บังคับความกว้างคอลัมน์ให้ตรงเป๊ะ */
         }
 
         th {
-            background-color: #0F172A;
-            color: var(--gold-color);
-            font-size: 14px;
-            padding: 10px 14px;
-            text-align: left;
-            border-bottom: 2px solid var(--gold-color);
+            background: linear-gradient(90deg, rgba(0, 240, 255, 0.15), transparent);
+            color: var(--cyan-glow); font-size: 13.5px; font-weight: 600;
+            padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--cyan-glow);
+            letter-spacing: 0.5px;
         }
 
         td {
-            font-size: 13px;
-            padding: 8px 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            line-height: 1.3;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 13.5px; padding: 8px 14px;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.1); color: #cbd5e1;
+            vertical-align: middle;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        tr:nth-child(even) td { background-color: var(--row-even); }
-        tr:nth-child(odd) td { background-color: var(--row-odd); }
+        /* Table Auto-height distribution for Top 15 */
+        .table-fullheight { height: 100%; flex-grow: 1; margin: 0; }
+        .table-fullheight th { font-size: 14px; padding: 8px 12px; }
+        .table-fullheight td { font-size: 14px; padding: 5px 12px; } /* Browser will auto scale row height evenly */
 
-        .status-green { color: #4ade80; font-weight: 500; }
-        .status-yellow { color: #facc15; font-weight: 500; }
-        .status-red { 
-            color: #f87171; 
-            font-weight: 700; 
-            text-shadow: 0 0 6px rgba(248, 113, 113, 0.6);
-        }
-        .status-blue { color: #60a5fa; font-weight: 500; }
-        .status-gray { color: var(--gray-color); font-weight: 400; }
+        tr:nth-child(even) td { background-color: rgba(15, 23, 42, 0.4); }
+        tr:hover td { background-color: rgba(0, 240, 255, 0.15); color: #fff; }
 
-        @keyframes sirenPulse {
-            0% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.6); }
-            50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.9); border-color: rgba(239, 68, 68, 1); }
-            100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.6); }
-        }
+        /* HUD Status Indicators */
+        .status-badge { font-family: 'Share Tech Mono', monospace; font-weight: bold; letter-spacing: 1px; }
+        .status-green { color: var(--alert-green); text-shadow: 0 0 8px rgba(34,197,94,0.6); }
+        .status-yellow { color: var(--alert-yellow); text-shadow: 0 0 8px rgba(250,204,21,0.6); }
+        .status-red { color: var(--alert-red); text-shadow: 0 0 10px rgba(255,42,42,0.8); animation: textBlink 1.5s infinite; }
+        .status-blue { color: var(--cyan-glow); text-shadow: 0 0 8px rgba(0,240,255,0.6); }
 
-        /* Summary Grid */
-        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px; flex-shrink: 0; }
+        /* HUD Summary Grid */
+        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 12px; flex-shrink: 0; }
         .summary-card {
-            background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 8px; padding: 14px 16px; border-top: 3px solid var(--gold-color);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            background: var(--panel-bg); border: 1px solid var(--panel-border);
+            padding: 12px 18px; border-top: 3px solid var(--cyan-glow);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5), inset 0 0 15px rgba(0,240,255,0.05);
+            position: relative;
         }
         .summary-card.alert-active {
-            animation: sirenPulse 2s infinite;
-            border-top-color: #ef4444;
-            background: rgba(239, 68, 68, 0.1);
+            border-top-color: var(--alert-red); background: rgba(255, 42, 42, 0.08);
+            box-shadow: inset 0 0 25px rgba(255, 42, 42, 0.15); animation: borderPulse 2s infinite;
         }
-        .summary-title { font-size: 13px; color: var(--gray-color); margin-bottom: 4px; }
-        .summary-value { font-size: 32px; font-weight: 700; color: var(--white-color); }
-        .summary-sub { font-size: 12px; color: var(--gold-color); margin-top: 2px; }
+        .summary-title { font-size: 13px; color: #94a3b8; margin-bottom: 2px; font-weight: 500; }
+        .summary-value { font-size: 34px; font-weight: 700; color: #fff; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; line-height: 1.1; }
+        .summary-sub { font-size: 12px; color: var(--cyan-glow); margin-top: 4px; font-family: 'Share Tech Mono', monospace; }
 
-        .bottom-section { display: flex; gap: 15px; flex: 1; min-height: 0; }
+        .bottom-section { display: flex; gap: 20px; flex: 1; min-height: 0; }
         
+        /* Alert Box */
         .alert-box {
-            flex: 1; background: rgba(220, 38, 38, 0.12); border-left: 4px solid #ef4444; 
-            padding: 14px 18px; border-radius: 0 8px 8px 0; display: flex; flex-direction: column; 
-            min-height: 0; border-top: 1px solid rgba(239, 68, 68, 0.2); border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+            flex: 1; background: rgba(255, 42, 42, 0.05); border-left: 4px solid var(--alert-red); 
+            padding: 12px 18px; display: flex; flex-direction: column; min-height: 0; 
+            border-top: 1px solid rgba(255, 42, 42, 0.3); border-bottom: 1px solid rgba(255, 42, 42, 0.3);
+            box-shadow: inset 20px 0 30px -20px rgba(255,42,42,0.3);
         }
-        .alert-title { color: #fca5a5; font-size: 15px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .alert-title { color: #fca5a5; font-size: 14px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-shrink: 0;}
         .alert-content { flex: 1; overflow-y: auto; padding-right: 5px; }
-        .alert-item { font-size: 14px; margin-bottom: 6px; padding-left: 15px; position: relative; }
-        .alert-item::before { content: '•'; color: #ef4444; position: absolute; left: 0; font-weight: bold; }
+        .alert-item { font-size: 13.5px; margin-bottom: 6px; padding-left: 20px; position: relative; color: #e2e8f0; }
+        .alert-item::before { content: '>>'; color: var(--alert-red); position: absolute; left: 0; font-family: 'Share Tech Mono', monospace; font-weight: bold; animation: textBlink 1s infinite;}
 
         .chart-box {
-            background: var(--panel-bg); border-radius: 8px; 
-            border: 1px solid rgba(255,255,255,0.08); padding: 14px; 
-            border-top: 3px solid var(--gold-color); display: flex; flex-direction: column; 
-            min-height: 0; flex-shrink: 0;
+            background: var(--panel-bg); border: 1px solid var(--panel-border); padding: 12px 15px; 
+            border-top: 3px solid var(--cyan-glow); display: flex; flex-direction: column; 
+            min-height: 0; flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
-        .chart-title { font-size: 14px; color: var(--gray-color); margin-bottom: 4px; text-align: left; flex-shrink: 0; font-weight: 600; }
+        .chart-title { font-size: 13.5px; color: var(--cyan-glow); margin-bottom: 8px; font-weight: 500;}
         .chart-container-inner { flex: 1; position: relative; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; }
 
-        /* Map Container & Dark Filter */
+        /* Map Container */
         #map-container {
-            width: 100%; height: 100%; border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.12); overflow: hidden; z-index: 1;
-            background: #0b0f19;
+            width: 100%; height: 100%; border-radius: 2px;
+            border: 1px solid rgba(0, 240, 255, 0.3); overflow: hidden; z-index: 1;
+            background: #0b0f19; box-shadow: inset 0 0 30px rgba(0,240,255,0.1);
         }
-        
-        .leaflet-tile-pane {
-            filter: invert(100%) hue-rotate(195deg) brightness(85%) contrast(140%) saturate(80%);
-        }
+        .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(150%) saturate(120%); }
+        .leaflet-popup-content-wrapper { background: rgba(15,23,42,0.95) !important; color: var(--cyan-glow) !important; border: 1px solid var(--cyan-glow); border-radius: 2px !important; backdrop-filter: blur(5px); }
+        .leaflet-popup-tip { background: var(--cyan-glow) !important; }
+        .custom-map-pin-red { animation: borderPulse 1.2s infinite; border-radius: 50%; }
 
-        .leaflet-popup-content-wrapper { background: #111827 !important; color: #FFFFFF !important; border: 1px solid var(--gold-color); border-radius: 8px !important; }
-        .leaflet-popup-tip { background: var(--gold-color) !important; }
+        /* Progress bars */
+        .progress-bar-bg { background: rgba(255,255,255,0.1); border-radius: 2px; height: 6px; width: 100%; margin-top: 5px; box-shadow: inset 0 0 5px rgba(0,0,0,0.5);}
+        .progress-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; box-shadow: 0 0 10px currentColor;}
 
-        .custom-map-pin-red {
-            animation: sirenPulse 1.2s infinite;
-            border-radius: 50%;
-        }
     </style>
 </head>
 <body>
@@ -363,33 +281,34 @@
     <!-- Control Panel -->
     <div id="tv-controls">
         <div class="control-group">
-            <span style="color: var(--gold-color); font-weight: bold; margin-right: 10px; font-size: 15px;">DTRUSS COMMAND CENTER</span>
+            <span class="system-title">SYS.HUD // DTRUSS COMMAND</span>
             <div class="digital-clock" id="live-digital-clock">00:00:00</div>
-            <button id="btn-morning" class="active-mode">☀️ รอบเช้า</button>
-            <button id="btn-afternoon">🌙 รอบบ่าย (อัปเดต)</button>
+            <button id="btn-morning" class="active-mode">SHF-01 (เช้า)</button>
+            <button id="btn-afternoon">SHF-02 (บ่าย)</button>
         </div>
         <div class="control-group">
-            <button id="btn-sync" class="btn-sync">🔄 อัปเดตข้อมูล Sheets</button>
-            <button id="btn-play" class="btn-play">▶ เล่นสไลด์วนทีวี (20s)</button>
+            <button id="btn-sync" class="btn-sync">SYNC DATA</button>
+            <button id="btn-play" class="btn-play">AUTO RUN</button>
             <button id="btn-prev">❮</button>
             <span class="slide-counter"><span id="current-slide">1</span> / <span id="total-slides">1</span></span>
             <button id="btn-next">❯</button>
-            <button id="btn-fullscreen" class="btn-fullscreen">🖥️ เต็มจอ</button>
+            <button id="btn-fullscreen" class="btn-fullscreen">FULL SCREEN</button>
         </div>
     </div>
 
     <!-- Presentation Area -->
     <div id="presentation-container">
-        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--gold-color); font-size: 22px;">
-            ⏳ กำลังโหลดข้อมูลระบบปฏิบัติการ Dtruss Elevator...
+        <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--cyan-glow); font-family: 'Share Tech Mono', monospace; font-size: 24px; text-shadow: 0 0 15px var(--cyan-glow);">
+            <div style="font-size: 48px; margin-bottom: 20px; animation: textBlink 1.5s infinite;">⚙️</div>
+            INITIALIZING DTRUSS MAINFRAME...
         </div>
     </div>
 
     <!-- Live Ticker Bar Bottom -->
     <div id="ticker-bar">
-        <div class="ticker-label">🚨 LIVE BROADCAST</div>
+        <div class="ticker-label">SYS.ALERT</div>
         <div class="ticker-wrap">
-            <div class="ticker-text" id="ticker-content">🏢 DTRUSS ELEVATOR OPERATIONS COMMAND CENTER • REAL-TIME MONITORING SYSTEM • ระบบกำลังเชื่อมต่อข้อมูล...</div>
+            <div class="ticker-text" id="ticker-content">ESTABLISHING CONNECTION... AWAITING SATELLITE DATA...</div>
         </div>
     </div>
 
@@ -397,84 +316,107 @@
         const GOOGLE_SHEET_ID = '17dvKbWwet_DhvUpva6xc8WfubgAMBw2fT0hBYvD_6bk';
         const MAX_ROWS_PER_PAGE = 10;
 
-        // Static YTD Data (ม.ค. - ก.ย. 2569)
+        // ข้อมูลสถิติสะสม (ม.ค. - ต.ค. 2569) รวม 3,122
         const ytdMonthlyData = [
-            { month: 'มกราคม', calls: 311, door: 96, stuck: 73, trapped: 5 },
-            { month: 'กุมภาพันธ์', calls: 274, door: 74, stuck: 67, trapped: 11 },
-            { month: 'มีนาคม', calls: 348, door: 111, stuck: 79, trapped: 16 },
-            { month: 'เมษายน', calls: 285, door: 108, stuck: 44, trapped: 22 },
-            { month: 'พฤษภาคม', calls: 343, door: 92, stuck: 67, trapped: 23 },
-            { month: 'มิถุนายน', calls: 308, door: 82, stuck: 68, trapped: 26 },
-            { month: 'กรกฎาคม', calls: 299, door: 75, stuck: 59, trapped: 20 },
-            { month: 'สิงหาคม', calls: 282, door: 90, stuck: 56, trapped: 12 },
-            { month: 'กันยายน', calls: 103, door: 45, stuck: 27, trapped: 5 }
+            { month: 'ม.ค.', calls: 311 }, { month: 'ก.พ.', calls: 274 },
+            { month: 'มี.ค.', calls: 348 }, { month: 'เม.ย.', calls: 285 },
+            { month: 'พ.ค.', calls: 343 }, { month: 'มิ.ย.', calls: 308 },
+            { month: 'ก.ค.', calls: 299 }, { month: 'ส.ค.', calls: 282 },
+            { month: 'ก.ย.', calls: 346 }, { month: 'ต.ค.', calls: 326 }
         ];
 
+        // หมวดหมู่ปัญหา
         const ytdCategoryData = [
-            { category: 'ระบบประตู (ประตูเปิด-ปิดค้าง / เซนเซอร์)', count: 773, pct: 30.28, color: '#f59e0b' },
-            { category: 'การแจ้งซ่อมทั่วไป (ไม่ระบุรายละเอียด)', count: 667, pct: 26.13, color: '#3b82f6' },
-            { category: 'ลิฟต์ค้าง / มีคนติดค้างในลิฟต์', count: 540, pct: 21.15, color: '#ef4444' },
-            { category: 'ระบบควบคุม / ปุ่มกด / บอร์ด ARD', count: 242, pct: 9.48, color: '#8b5cf6' },
-            { category: 'ระบบกลไกและการเคลื่อนที่ (เสียงดัง/สั่น)', count: 220, pct: 8.62, color: '#10b981' },
-            { category: 'ระบบไฟฟ้าหลัก / เบรกเกอร์ทริป / ไฟตก', count: 78, pct: 3.06, color: '#ec4899' },
-            { category: 'ปัจจัยภายนอก (น้ำเข้าปล่อง / เศษขยะ)', count: 33, pct: 1.29, color: '#64748b' }
+            { category: 'ปัญหาประตู & แจ้งทั่วไป', count: 2117, color: '#3b82f6' },
+            { category: 'ลิฟต์ค้าง / มีคนติดค้าง', count: 629, color: '#ef4444' },
+            { category: 'ระบบควบคุม / ไฟฟ้า', count: 156, color: '#00f0ff' },
+            { category: 'ระบบกลไก (เสียงดัง/สั่น)', count: 127, color: '#22c55e' },
+            { category: 'ปัจจัยภายนอก (น้ำ/ขยะ)', count: 59, color: '#a855f7' },
+            { category: 'บันไดเลื่อน', count: 34, color: '#94a3b8' }
+        ];
+
+        const callRateTeams = [
+            { team: 'ภาคอีสาน', rate: 0.056, calls: 173, units: 309, color: '#22c55e' },
+            { team: 'ทีมนัท (รวมกลางตอนล่าง)', rate: 0.059, calls: 103, units: 175, color: '#22c55e' },
+            { team: 'ภาคเหนือ', rate: 0.062, calls: 50, units: 81, color: '#22c55e' },
+            { team: 'กลางตอนบน', rate: 0.068, calls: 43, units: 63, color: '#22c55e' },
+            { team: 'ทีมยุบ', rate: 0.079, calls: 55, units: 70, color: '#22c55e' },
+            { team: 'ทีมเมืองทอง', rate: 0.107, calls: 188, units: 175, color: '#22c55e' },
+            { team: 'ภาคใต้', rate: 0.184, calls: 235, units: 128, color: '#22c55e' },
+            { team: 'ทีมวิน', rate: 0.218, calls: 538, units: 247, color: '#22c55e' },
+            { team: 'ทีมทิว', rate: 0.225, calls: 774, units: 344, color: '#22c55e' },
+            { team: 'ทีมชลบุรี', rate: 0.231, calls: 332, units: 144, color: '#22c55e' },
+            { team: 'ทีมเปเล่', rate: 0.317, calls: 631, units: 199, color: '#ef4444' }
+        ];
+
+        const pmTeams = [
+            { team: 'ทีมเมืองทองธานี', units: 200, sent: 599, total: 599, kpi: 100.00, pending: 0, color: '#22c55e' },
+            { team: 'ทีมทิว', units: 376, sent: 1779, total: 1884, kpi: 94.43, pending: 105, color: '#00f0ff' },
+            { team: 'ทีมเปเล่', units: 202, sent: 907, total: 981, kpi: 92.46, pending: 74, color: '#00f0ff' },
+            { team: 'ทีมยุบ', units: 92, sent: 415, total: 464, kpi: 89.44, pending: 49, color: '#facc15' },
+            { team: 'ทีมวิน', units: 314, sent: 1418, total: 1623, kpi: 87.37, pending: 205, color: '#facc15' },
+            { team: 'ทีมพี่นัท', units: 132, sent: 661, total: 771, kpi: 85.73, pending: 110, color: '#facc15' }
         ];
 
         const ytdTopProjects = [
-            { project: 'บริษัทเอสติวัล', calls: 66, door: 31, stuck: 13, trapped: 0, status: '🟡 เฝ้าระวังประตู', color: 'yellow' },
-            { project: 'โรงพยาบาลปทุมธานี', calls: 63, door: 26, stuck: 6, trapped: 3, status: '🟡 เฝ้าระวังบอร์ดควบคุม', color: 'yellow' },
-            { project: 'แกรนด์ปาร์คทาวน์', calls: 51, door: 4, stuck: 25, trapped: 10, status: '🚨 เสี่ยงสูง (คนติดค้างสูงสุด)', color: 'red' },
-            { project: 'เมืองทองบางนา', calls: 49, door: 7, stuck: 24, trapped: 4, status: '🔴 เฝ้าระวังลิฟต์ค้าง', color: 'red' },
-            { project: 'Ds2', calls: 42, door: 20, stuck: 13, trapped: 4, status: '🟡 เฝ้าระวังประตู/ค้าง', color: 'yellow' },
-            { project: 'เดอะมาสเตอร์ เซ็นเธรี่ยม', calls: 36, door: 9, stuck: 8, trapped: 0, status: '🟢 ปกติ', color: 'green' },
-            { project: 'โรงพยาบาลวชิระ', calls: 30, door: 9, stuck: 6, trapped: 0, status: '🟢 ปกติ', color: 'green' },
-            { project: 'โรงพยาบาลนพรัตน์', calls: 29, door: 3, stuck: 5, trapped: 0, status: '🔵 ติดตามระบบกลไก', color: 'blue' },
-            { project: 'บริษัทเฮนนี่เวย์', calls: 28, door: 5, stuck: 15, trapped: 0, status: '🟡 เฝ้าระวังลิฟต์ค้าง', color: 'yellow' },
-            { project: 'เมืองทองธานี T9', calls: 28, door: 5, stuck: 9, trapped: 2, status: '🟡 เฝ้าระวังไฟตก', color: 'yellow' }
+            { project: 'เมืองทองธานีรวม', calls: 188, general: 113, stuck: 64, trapped: 12, status: '[ CRIT ]', color: 'red' },
+            { project: 'รพ.ปทุมธานี', calls: 75, general: 56, stuck: 12, trapped: 2, status: '[ WARN ]', color: 'yellow' },
+            { project: 'เอสติวัล', calls: 72, general: 68, stuck: 3, trapped: 0, status: '[ WARN ]', color: 'yellow' },
+            { project: 'แกรนด์ปาร์คทาวน์', calls: 63, general: 44, stuck: 19, trapped: 8, status: '[ CRIT ]', color: 'red' },
+            { project: 'dstower 2', calls: 55, general: 31, stuck: 19, trapped: 3, status: '[ WARN ]', color: 'yellow' },
+            { project: 'เดอะมาสเตอร์ฯ', calls: 55, general: 40, stuck: 13, trapped: 1, status: '[ OK ]', color: 'green' },
+            { project: 'เมืองทองบางนา', calls: 55, general: 20, stuck: 30, trapped: 7, status: '[ CRIT ]', color: 'red' },
+            { project: 'รพ.เกษมราษฎร์ ปทุมฯ', calls: 46, general: 32, stuck: 12, trapped: 0, status: '[ WARN ]', color: 'yellow' },
+            { project: 'สารินเพลส', calls: 35, general: 18, stuck: 10, trapped: 0, status: '[ OK ]', color: 'green' },
+            { project: 'เดอะเลกาซี่', calls: 35, general: 25, stuck: 7, trapped: 0, status: '[ OK ]', color: 'green' },
+            { project: 'ILC', calls: 35, general: 24, stuck: 5, trapped: 0, status: '[ OK ]', color: 'green' },
+            { project: 'รพ.นพรัตน์', calls: 34, general: 17, stuck: 7, trapped: 0, status: '[ OK ]', color: 'green' },
+            { project: 'บริษัทเฮนนี่เวย์', calls: 33, general: 30, stuck: 3, trapped: 0, status: '[ OK ]', color: 'green' },
+            { project: 'เอ็นริช', calls: 33, general: 33, stuck: 0, trapped: 0, status: '[ OK ]', color: 'green' },
+            { project: 'รพ.วชิระ', calls: 30, general: 16, stuck: 11, trapped: 0, status: '[ OK ]', color: 'green' }
         ];
 
         let dataTiw = [], dataPele = [], dataJet = [], dataNut = [], dataUpcountry = [], dataMgmt = [], dataRepair = [];
-        let currentMode = 'morning';
-        let currentSlide = 1;
-        let totalSlidesCount = 1;
-        let playInterval;
-        let isPlaying = false;
-        let isFetching = false;
-        let map = null, mapMarkers = [];
-        let workloadChart = null, ytdTrendChart = null, ytdCategoryChart = null; 
+        let currentMode = 'morning'; let currentSlide = 1; let totalSlidesCount = 1;
+        let playInterval; let isPlaying = false; let isFetching = false;
+        let map = null, mapMarkers = []; let workloadChart = null, ytdTrendChart = null, ytdCategoryChart = null; 
 
-        // Digital Clock
+        // --- ระบบ Auto Shift เช็คเวลา ---
         function updateDigitalClock() {
             const now = new Date();
             const h = String(now.getHours()).padStart(2, '0');
             const m = String(now.getMinutes()).padStart(2, '0');
             const s = String(now.getSeconds()).padStart(2, '0');
             document.getElementById('live-digital-clock').textContent = `${h}:${m}:${s}`;
-        }
-        setInterval(updateDigitalClock, 1000);
-        updateDigitalClock();
 
-        // Count-Up Animation
+            const currentHour = now.getHours();
+            const targetMode = currentHour >= 13 ? 'afternoon' : 'morning';
+            
+            if (targetMode !== currentMode) {
+                currentMode = targetMode;
+                document.getElementById('btn-morning').classList.toggle('active-mode', currentMode === 'morning');
+                document.getElementById('btn-afternoon').classList.toggle('active-mode', currentMode === 'afternoon');
+                if (!isFetching && dataTiw.length > 0) renderDynamicSlides();
+            }
+        }
+        setInterval(updateDigitalClock, 1000); updateDigitalClock();
+
         function animateNumberCount(id, targetVal) {
             const el = document.getElementById(id);
             if (!el) return;
-            let current = 0;
-            const increment = Math.ceil(targetVal / 20) || 1;
+            let current = 0; const increment = Math.ceil(targetVal / 20) || 1;
             const timer = setInterval(() => {
                 current += increment;
-                if (current >= targetVal) {
-                    current = targetVal;
-                    clearInterval(timer);
-                }
-                el.childNodes[0].nodeValue = current + ' ';
+                if (current >= targetVal) { current = targetVal; clearInterval(timer); }
+                el.childNodes[0].nodeValue = current;
             }, 30);
         }
 
         function getStatusIcon(colorClass) {
-            if (colorClass === 'green') return '🟢 ';
-            if (colorClass === 'blue') return '🔵 ';
-            if (colorClass === 'yellow') return '🟡 ';
-            if (colorClass === 'red') return '🚨 ';
+            if (colorClass === 'green') return '<span class="status-badge status-green">[ OK ]</span> ';
+            if (colorClass === 'blue') return '<span class="status-badge status-blue">[ INFO ]</span> ';
+            if (colorClass === 'yellow') return '<span class="status-badge status-yellow">[ WARN ]</span> ';
+            if (colorClass === 'red') return '<span class="status-badge status-red">[ CRIT ]</span> ';
             return '';
         }
 
@@ -483,180 +425,100 @@
             val = String(val).trim();
             if (val.startsWith('Date(')) {
                 const matches = val.match(/\d+/g);
-                if (matches && matches.length >= 5) {
-                    const h = String(matches[3]).padStart(2, '0');
-                    const m = String(matches[4]).padStart(2, '0');
-                    return `${h}:${m}`;
-                }
+                if (matches && matches.length >= 5) return `${String(matches[3]).padStart(2, '0')}:${String(matches[4]).padStart(2, '0')}`;
             }
             return val;
         }
 
-        function isRowNotEmpty(r) {
-            if (!r || r.length === 0) return false;
-            const col0 = r[0] ? String(r[0]).trim() : '';
-            const col1 = r[1] ? String(r[1]).trim() : '';
-            return (col0 !== '' && col0 !== '-') || (col1 !== '' && col1 !== '-');
-        }
-
+        function isRowNotEmpty(r) { return r && r.length > 0 && ((r[0] && String(r[0]).trim() !== '-') || (r[1] && String(r[1]).trim() !== '-')); }
         function chunkArray(array, chunkSize) {
-            if (!array || array.length === 0) return [[]];
             const results = [];
-            for (let i = 0; i < array.length; i += chunkSize) {
-                results.push(array.slice(i, i + chunkSize));
-            }
-            return results;
+            for (let i = 0; i < (array ? array.length : 0); i += chunkSize) results.push(array.slice(i, i + chunkSize));
+            return results.length ? results : [[]];
         }
 
         function fetchSheetTab(sheetName) {
             return new Promise((resolve) => {
                 if (!GOOGLE_SHEET_ID) return resolve(null);
                 const callbackName = 'sheet_cb_' + Math.random().toString(36).substring(2, 9);
-                
-                const timeout = setTimeout(() => {
-                    if (window[callbackName]) {
-                        delete window[callbackName];
-                        if (script.parentNode) script.parentNode.removeChild(script);
-                        resolve(null);
-                    }
-                }, 15000); 
-
+                const timeout = setTimeout(() => { if (window[callbackName]) { delete window[callbackName]; resolve(null); } }, 15000); 
                 window[callbackName] = function(data) {
-                    clearTimeout(timeout);
-                    delete window[callbackName];
-                    if (script.parentNode) script.parentNode.removeChild(script);
-
-                    if (data && data.table && data.table.rows) {
-                        const rows = data.table.rows.map(row => 
-                            row.c ? row.c.map(cell => cell ? (cell.v !== null && cell.v !== undefined ? String(cell.v) : '') : '') : []
-                        );
-                        resolve(rows);
-                    } else { resolve(null); }
+                    clearTimeout(timeout); delete window[callbackName];
+                    resolve(data?.table?.rows ? data.table.rows.map(row => row.c ? row.c.map(cell => cell?.v != null ? String(cell.v) : '') : []) : null);
                 };
-
                 const script = document.createElement('script');
                 script.src = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(sheetName)}&tqx=responseHandler:${callbackName}`;
-                script.onerror = function() {
-                    clearTimeout(timeout);
-                    delete window[callbackName];
-                    if (script.parentNode) script.parentNode.removeChild(script);
-                    resolve(null);
-                };
+                script.onerror = function() { clearTimeout(timeout); delete window[callbackName]; resolve(null); };
                 document.body.appendChild(script);
             });
         }
 
-        function isHeaderRow(firstCell, headerKey) {
-            return firstCell && firstCell.toString().trim() === headerKey;
-        }
-
         function parseTeamRows(rows, teamLabel) {
-            if (!rows || rows.length === 0) return [];
-            const startIndex = isHeaderRow(rows[0][0], 'ช่าง') ? 1 : 0;
-            return rows.slice(startIndex)
-                .filter(isRowNotEmpty)
-                .map(r => ({
-                    team: teamLabel,
-                    name: r[0] ? String(r[0]).trim() : '-',
-                    place: r[1] ? String(r[1]).trim() : '-',
-                    code: r[2] ? String(r[2]).trim() : '-',
-                    qty: r[3] ? String(r[3]).trim() : '-',
-                    contact: r[4] ? String(r[4]).trim() : '-',
-                    statusM: r[5] ? String(r[5]).trim() : '-',
-                    cM: (r[6] ? String(r[6]).trim() : 'green').toLowerCase(),
-                    statusA: r[7] ? String(r[7]).trim() : '-',
-                    cA: (r[8] ? String(r[8]).trim() : 'green').toLowerCase(),
-                    coords: r[9] ? String(r[9]).trim() : ''
-                }));
+            if (!rows) return [];
+            const startIndex = (rows[0] && rows[0][0] && rows[0][0].toString().trim() === 'ช่าง') ? 1 : 0;
+            return rows.slice(startIndex).filter(isRowNotEmpty).map(r => ({
+                team: teamLabel, name: r[0] || '-', place: r[1] || '-', code: r[2] || '-', qty: r[3] || '-', contact: r[4] || '-',
+                statusM: r[5] || '-', cM: (r[6] || 'green').toLowerCase(), statusA: r[7] || '-', cA: (r[8] || 'green').toLowerCase(), coords: r[9] || ''
+            }));
         }
 
         async function loadAllDataFromGoogleSheets() {
             if (isFetching) return;
-            isFetching = true;
-
-            const btnSync = document.getElementById('btn-sync');
-            btnSync.innerHTML = '⏳ กำลังดึงข้อมูล...';
-            btnSync.disabled = true;
+            isFetching = true; document.getElementById('btn-sync').innerHTML = 'SYNCING...';
 
             try {
-                const [tiwRows, peleRows, jetRows, nutRows, upcountryRows, mgmtRows, repairRows] = await Promise.all([
-                    fetchSheetTab('Tiw'), fetchSheetTab('Pele'), fetchSheetTab('Jet'),
-                    fetchSheetTab('Nut'), fetchSheetTab('Upcountry'),
-                    fetchSheetTab('Management'), fetchSheetTab('Breakdown')
+                const [tiw, pele, jet, nut, upc, mgmt, repair] = await Promise.all([
+                    fetchSheetTab('Tiw'), fetchSheetTab('Pele'), fetchSheetTab('Jet'), fetchSheetTab('Nut'),
+                    fetchSheetTab('Upcountry'), fetchSheetTab('Management'), fetchSheetTab('Breakdown')
                 ]);
 
-                if(tiwRows) dataTiw = parseTeamRows(tiwRows, 'ทีมทิว');
-                if(peleRows) dataPele = parseTeamRows(peleRows, 'ทีมเปเล่');
-                if(jetRows) dataJet = parseTeamRows(jetRows, 'ทีมเจ็ท');
-                if(nutRows) dataNut = parseTeamRows(nutRows, 'ทีมช่างนัท');
-                if(upcountryRows) dataUpcountry = parseTeamRows(upcountryRows, 'ช่างต่างจังหวัด');
+                if(tiw) dataTiw = parseTeamRows(tiw, 'ทีมทิว');
+                if(pele) dataPele = parseTeamRows(pele, 'ทีมเปเล่');
+                if(jet) dataJet = parseTeamRows(jet, 'ทีมเจ็ท');
+                if(nut) dataNut = parseTeamRows(nut, 'ทีมช่างนัท');
+                if(upc) dataUpcountry = parseTeamRows(upc, 'ทีมต่างจังหวัด');
 
-                if (mgmtRows && mgmtRows.length > 0) {
-                    const startIndex = isHeaderRow(mgmtRows[0][0], 'ผู้รับผิดชอบ') ? 1 : 0;
-                    dataMgmt = mgmtRows.slice(startIndex).filter(isRowNotEmpty).map(r => ({
-                        name: r[0] ? String(r[0]).trim() : '-',
-                        task: r[1] ? String(r[1]).trim() : '-',
-                        descM: r[2] ? String(r[2]).trim() : '-',
-                        descA: r[3] ? String(r[3]).trim() : '-'
-                    }));
+                if (mgmt && mgmt.length > 0) {
+                    const start = (mgmt[0][0] && mgmt[0][0].toString().trim() === 'ผู้รับผิดชอบ') ? 1 : 0;
+                    dataMgmt = mgmt.slice(start).filter(isRowNotEmpty).map(r => ({ name: r[0] || '-', task: r[1] || '-', descM: r[2] || '-', descA: r[3] || '-' }));
                 }
 
-                if (repairRows && repairRows.length > 0) {
-                    const startIndex = isHeaderRow(repairRows[0][0], 'เวลาแจ้ง') ? 1 : 0;
-                    dataRepair = repairRows.slice(startIndex).filter(isRowNotEmpty).map(r => ({
-                        timeAlert: parseTimeValue(r[0]), place: r[1] ? String(r[1]).trim() : '-',
-                        issue: r[2] ? String(r[2]).trim() : '-', name: r[3] ? String(r[3]).trim() : '-',
+                if (repair && repair.length > 0) {
+                    const start = (repair[0][0] && repair[0][0].toString().trim() === 'เวลาแจ้ง') ? 1 : 0;
+                    dataRepair = repair.slice(start).filter(isRowNotEmpty).map(r => ({
+                        timeAlert: parseTimeValue(r[0]), place: r[1] || '-', issue: r[2] || '-', name: r[3] || '-',
                         timeArrive: parseTimeValue(r[4]), timeFinish: parseTimeValue(r[5]),
-                        statusM: r[6] ? String(r[6]).trim() : '-', cM: (r[7] ? String(r[7]).trim() : 'gray').toLowerCase(),
-                        statusA: r[8] ? String(r[8]).trim() : '-', cA: (r[9] ? String(r[9]).trim() : 'gray').toLowerCase()
+                        statusM: r[6] || '-', cM: (r[7] || 'gray').toLowerCase(), statusA: r[8] || '-', cA: (r[9] || 'gray').toLowerCase()
                     }));
                 }
-
                 renderDynamicSlides();
-
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            } finally {
-                btnSync.innerHTML = '🔄 อัปเดตข้อมูล Sheets';
-                btnSync.disabled = false;
-                isFetching = false;
-            }
+            } catch (error) { console.error("Data Sync Error:", error); } 
+            finally { document.getElementById('btn-sync').innerHTML = 'SYNC DATA'; isFetching = false; }
         }
+
+        const logoHeaderHTML = `
+            <div class="logo-wrapper">
+                <img src="story-1.webp" alt="DTRUSS" class="sci-fi-logo">
+                <span class="hud-subtitle">ระบบปฏิบัติการส่วนกลาง // OPERATIONS COMMAND CENTER</span>
+            </div>
+        `;
 
         function updatePieChart() {
             const ctx = document.getElementById('teamPieChart');
             if (!ctx) return;
-
             const counts = [dataTiw.length, dataPele.length, dataJet.length, dataNut.length, dataUpcountry.length];
             const labels = ['ทีมทิว', 'ทีมเปเล่', 'ทีมเจ็ท', 'ทีมช่างนัท', 'ต่างจังหวัด'];
-            const colors = ['#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899'];
+            const colors = ['#22c55e', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899'];
 
-            if (workloadChart) { workloadChart.destroy(); }
-
-            Chart.defaults.color = '#94A3B8';
-            Chart.defaults.font.family = "'Prompt', sans-serif";
+            if (workloadChart) workloadChart.destroy();
+            Chart.defaults.color = '#94A3B8'; Chart.defaults.font.family = "'Prompt', sans-serif";
 
             workloadChart = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: counts,
-                        backgroundColor: colors,
-                        borderWidth: 0,
-                        hoverOffset: 6
-                    }]
-                },
+                data: { labels: labels, datasets: [{ data: counts, backgroundColor: colors, borderWidth: 0, hoverOffset: 5 }] },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '60%', 
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: { color: '#FFF', font: { size: 13 }, boxWidth: 12, padding: 10 }
-                        }
-                    }
+                    responsive: true, maintainAspectRatio: false, cutout: '65%',
+                    plugins: { legend: { position: 'right', labels: { color: '#00f0ff', font: { size: 13 }, boxWidth: 10 } } }
                 }
             });
         }
@@ -666,24 +528,21 @@
             if (ctxTrend) {
                 if (ytdTrendChart) ytdTrendChart.destroy();
                 ytdTrendChart = new Chart(ctxTrend, {
-                    type: 'bar',
+                    type: 'line',
                     data: {
                         labels: ytdMonthlyData.map(d => d.month),
-                        datasets: [
-                            { label: 'รวมแจ้งซ่อม', data: ytdMonthlyData.map(d => d.calls), backgroundColor: '#3b82f6', borderRadius: 4 },
-                            { label: 'ปัญหาประตู', data: ytdMonthlyData.map(d => d.door), backgroundColor: '#f59e0b', borderRadius: 4 },
-                            { label: 'ลิฟต์ค้าง', data: ytdMonthlyData.map(d => d.stuck), backgroundColor: '#ef4444', borderRadius: 4 }
-                        ]
+                        datasets: [{ 
+                            label: 'รวมแจ้งซ่อม (Calls)', data: ytdMonthlyData.map(d => d.calls), 
+                            borderColor: '#00f0ff', backgroundColor: 'rgba(0, 240, 255, 0.1)',
+                            fill: true, tension: 0.2, pointBackgroundColor: '#fff', pointBorderColor: '#00f0ff', pointRadius: 4
+                        }]
                     },
                     options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'top', labels: { color: '#FFF', font: { size: 12 }, boxWidth: 12 } }
-                        },
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
                         scales: {
-                            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94A3B8' } },
-                            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94A3B8' } }
+                            x: { grid: { color: 'rgba(0,240,255,0.1)' }, ticks: { color: '#00f0ff', font: {family: "'Prompt'"} } },
+                            y: { grid: { color: 'rgba(0,240,255,0.1)' }, ticks: { color: '#00f0ff', font: {family: "'Share Tech Mono'"} }, min: 200 }
                         }
                     }
                 });
@@ -693,26 +552,9 @@
             if (ctxCat) {
                 if (ytdCategoryChart) ytdCategoryChart.destroy();
                 ytdCategoryChart = new Chart(ctxCat, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ytdCategoryData.map(c => c.category),
-                        datasets: [{
-                            data: ytdCategoryData.map(c => c.count),
-                            backgroundColor: ytdCategoryData.map(c => c.color),
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '55%',
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: { color: '#FFF', font: { size: 11 }, boxWidth: 10, padding: 8 }
-                            }
-                        }
-                    }
+                    type: 'pie',
+                    data: { labels: ytdCategoryData.map(c => c.category), datasets: [{ data: ytdCategoryData.map(c => c.count), backgroundColor: ytdCategoryData.map(c => c.color), borderWidth: 1, borderColor: '#010409' }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#cbd5e1', font: { size: 12.5, family: "'Prompt'" }, boxWidth: 12 } } } }
                 });
             }
         }
@@ -721,27 +563,22 @@
             if (map) { map.remove(); map = null; mapMarkers = []; }
 
             const container = document.getElementById('presentation-container');
-            container.innerHTML = '';
-            let slideIndex = 1;
+            container.innerHTML = ''; let slideIndex = 1;
 
             const now = new Date();
-            const thDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
-            const thMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-            const dateStr = `${thDays[now.getDay()]} ${now.getDate()} ${thMonths[now.getMonth()]} ${now.getFullYear() + 543}`;
-            const periodStr = currentMode === 'morning' ? 'เช้า' : 'บ่าย (อัปเดต)';
+            const dateStr = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear() + 543} [อัปเดตล่าสุด]`;
+            const periodStr = currentMode === 'morning' ? 'ข้อมูลรอบเช้า' : 'ข้อมูลรอบบ่าย';
 
             const totalField = dataTiw.length + dataPele.length + dataJet.length + dataNut.length + dataUpcountry.length;
             const totalTasksAll = totalField + dataMgmt.length;
             let repairActive = dataRepair.filter(r => r.place !== '-' && r.place !== '').length;
 
-            let alertItems = [];
-            let alertSummaryText = [];
-
+            let alertItems = []; let alertSummaryText = [];
             [...dataTiw, ...dataPele, ...dataJet, ...dataNut, ...dataUpcountry].forEach(r => {
                 const col = currentMode === 'morning' ? r.cM : r.cA;
                 const stat = currentMode === 'morning' ? r.statusM : r.statusA;
                 if (col === 'red' || col === 'yellow') {
-                    alertItems.push(`<div class="alert-item">${r.name}: ${r.place} - <span class="status-${col}">${stat}</span></div>`);
+                    alertItems.push(`<div class="alert-item"><span>${r.name} @ ${r.place}</span> - <span class="status-${col}">${stat}</span></div>`);
                     alertSummaryText.push(`[${r.team}] ${r.name} @ ${r.place} (${stat})`);
                 }
             });
@@ -749,151 +586,284 @@
             // Live Ticker
             const tickerEl = document.getElementById('ticker-content');
             if (alertSummaryText.length > 0) {
-                tickerEl.innerHTML = `🚨 <b>รายการเฝ้าระวังด่วน (${alertSummaryText.length} เคส):</b> ${alertSummaryText.join('  •  ')}  •  🏢 DTRUSS COMMAND CENTER AUTOMATED MONITORING SYSTEM`;
+                tickerEl.innerHTML = `⚠️ รายการเฝ้าระวังด่วน (${alertItems.length} เคส): ${alertSummaryText.join('  //  ')}  //  DTRUSS COMMAND CENTER AUTOMATED MONITORING SYSTEM`;
             } else {
-                tickerEl.innerHTML = `🟢 <b>สถานะระบบปกติ:</b> ไม่พบเคสเฝ้าระวังด่วนในขณะนี้  •  ภารกิจทั้งหมดประจำวัน: ${totalTasksAll} รายการ  •  📊 สถิติสะสม YTD 2569: แจ้งซ่อมรวม 2,553 ครั้ง  •  🏢 DTRUSS ELEVATOR COMMAND CENTER`;
+                tickerEl.innerHTML = `🟢 สถานะระบบปกติ: ไม่พบเคสเฝ้าระวังด่วนในขณะนี้  //  ภารกิจทั้งหมดประจำวัน: ${totalTasksAll} รายการ  //  สถิติสะสม YTD 2569: วิเคราะห์แจ้งซ่อมรวม 3,122 ครั้ง  //  DTRUSS COMMAND CENTER`;
             }
 
             // --- Slide 1: Executive Overview ---
             const alertCardClass = alertItems.length > 0 ? 'summary-card alert-active' : 'summary-card';
-
             container.innerHTML += `
                 <div class="slide" id="slide-${slideIndex}">
-                    <div class="gold-line"></div>
+                    <div class="laser-line"></div>
                     <div class="slide-header">
-                        <div class="logo-text">DTRUSS ELEVATOR | Operations Command Center</div>
+                        ${logoHeaderHTML}
                         <div class="slide-title">
-                            <span>EXECUTIVE OVERVIEW & DAILY KPI SUMMARY</span>
-                            <span class="slide-date">${dateStr} | ข้อมูลรอบ${periodStr}</span>
+                            <span>ภาพรวมระบบปฏิบัติการ & สรุปภารกิจประจำวัน</span>
+                            <span class="slide-date">${dateStr} | ${periodStr}</span>
                         </div>
                     </div>
                     <div class="slide-content">
                         <div class="summary-grid">
                             <div class="summary-card">
-                                <div class="summary-title">รวมภารกิจทั้งหมด</div>
-                                <div class="summary-value" id="kpi-total">${totalTasksAll} <span style="font-size:16px;font-weight:400">รายการ</span></div>
-                                <div class="summary-sub">งานสนาม ${totalField} / บริหาร ${dataMgmt.length}</div>
+                                <div class="summary-title">ภารกิจรวมทั้งหมด</div>
+                                <div class="summary-value" id="kpi-total">${totalTasksAll}</div>
+                                <div class="summary-sub">งานสนาม: ${totalField} // บริหาร: ${dataMgmt.length}</div>
                             </div>
                             <div class="summary-card">
-                                <div class="summary-title">ทีมปฏิบัติการสนาม (Active)</div>
-                                <div class="summary-value" id="kpi-teams">5 <span style="font-size:16px;font-weight:400">ทีม</span></div>
+                                <div class="summary-title">ทีมช่างที่ปฏิบัติงาน</div>
+                                <div class="summary-value" id="kpi-teams">5</div>
                                 <div class="summary-sub">ทิว, เปเล่, เจ็ท, นัท, ต่างจังหวัด</div>
                             </div>
                             <div class="summary-card">
-                                <div class="summary-title">งานรับแจ้งซ่อมฉุกเฉิน</div>
-                                <div class="summary-value" id="kpi-repair">${repairActive} <span style="font-size:16px;font-weight:400">เคส</span></div>
-                                <div class="summary-sub">ข้อมูลแจ้งซ่อมประจำวัน</div>
+                                <div class="summary-title">เคสแจ้งซ่อมฉุกเฉิน</div>
+                                <div class="summary-value" id="kpi-repair" style="color:var(--cyan-glow);">${repairActive}</div>
+                                <div class="summary-sub">จากบันทึกรับแจ้งซ่อมวันนี้</div>
                             </div>
                             <div class="${alertCardClass}">
-                                <div class="summary-title">รายการเฝ้าระวังด่วน (Alerts)</div>
-                                <div class="summary-value" style="color: ${alertItems.length > 0 ? '#ef4444' : '#4ade80'};" id="kpi-alerts">${alertItems.length} <span style="font-size:16px;font-weight:400">เคส</span></div>
-                                <div class="summary-sub">${alertItems.length > 0 ? 'ต้องติดตามความคืบหน้า' : 'สถานะปกติ'}</div>
+                                <div class="summary-title">รายการเฝ้าระวังด่วน</div>
+                                <div class="summary-value" style="color: ${alertItems.length > 0 ? '#ef4444' : '#22c55e'};" id="kpi-alerts">${alertItems.length}</div>
+                                <div class="summary-sub">${alertItems.length > 0 ? 'ต้องติดตามความคืบหน้า' : 'สถานะทุกรายการปกติ'}</div>
                             </div>
                         </div>
-
                         <div class="bottom-section">
                             <div class="alert-box">
-                                <div class="alert-title">⚠️ Action Required (รายการต้องติดตามความคืบหน้า)</div>
+                                <div class="alert-title">⚠️ รายการเฝ้าระวังที่ต้องติดตาม (PRIORITY WATCHLIST)</div>
                                 <div class="alert-content">
-                                    ${alertItems.length > 0 ? alertItems.join('') : '<div class="alert-item status-green" style="margin-top:10px;">🟢 ทุกรายการอยู่ในสภาวะปกติ</div>'}
+                                    ${alertItems.length > 0 ? alertItems.join('') : '<div class="alert-item" style="border-left-color:#22c55e; color:#22c55e; background:rgba(34, 197, 94, 0.1); padding: 12px; margin-top: 10px;">🟢 ทุกรายการอยู่ในสภาวะปกติ (ALL SYSTEMS OPERATING NORMALLY)</div>'}
                                 </div>
                             </div>
-                            <div class="chart-box" style="width: 460px;">
-                                <div class="chart-title">สัดส่วนปริมาณงานตามทีม (วันนี้)</div>
-                                <div class="chart-container-inner">
-                                    <canvas id="teamPieChart"></canvas>
-                                </div>
+                            <div class="chart-box" style="width: 480px;">
+                                <div class="chart-title">สัดส่วนภารกิจตามทีม (วันนี้)</div>
+                                <div class="chart-container-inner"><canvas id="teamPieChart"></canvas></div>
                             </div>
                         </div>
                     </div>
                 </div>`;
             slideIndex++;
 
-            // --- Slide 2: YTD Elevator Statistics ---
+            // --- Slide 2: YTD Analytics ---
             container.innerHTML += `
                 <div class="slide" id="slide-${slideIndex}">
-                    <div class="gold-line"></div>
+                    <div class="laser-line"></div>
                     <div class="slide-header">
-                        <div class="logo-text">DTRUSS ELEVATOR | YTD Analytics & Performance Dashboard</div>
+                        ${logoHeaderHTML}
                         <div class="slide-title">
-                            <span>YTD STATISTICAL OVERVIEW & INCIDENT CHARTS</span>
-                            <span class="slide-date">ข้อมูลสถิติสะสม ม.ค. - ก.ย. 2569</span>
+                            <span>สถิติวิเคราะห์การแจ้งซ่อม (ม.ค. - ต.ค. 2569)</span>
+                            <span class="slide-date">อ้างอิงฐานข้อมูลจริง 3,122 เคส</span>
                         </div>
                     </div>
                     <div class="slide-content">
                         <div class="summary-grid">
                             <div class="summary-card">
-                                <div class="summary-title">ยอดแจ้งซ่อมสะสมรวม</div>
-                                <div class="summary-value" style="color:var(--gold-color)">2,553 <span style="font-size:16px;font-weight:400">ครั้ง</span></div>
-                                <div class="summary-sub">เฉลี่ย ~283 ครั้ง/เดือน</div>
+                                <div class="summary-title">ยอดแจ้งซ่อมสะสม (10 เดือน)</div>
+                                <div class="summary-value" style="color:#fff">3,122</div>
+                                <div class="summary-sub">เฉลี่ย ~312 ครั้ง/เดือน</div>
                             </div>
                             <div class="summary-card">
-                                <div class="summary-title">ปัญหาประตู (อันดับ 1)</div>
-                                <div class="summary-value" style="color:#facc15">773 <span style="font-size:16px;font-weight:400">ครั้ง</span></div>
-                                <div class="summary-sub">คิดเป็น 30.28% ของเคสทั้งหมด</div>
+                                <div class="summary-title">ปัญหาประตู & ทั่วไป (อันดับ 1)</div>
+                                <div class="summary-value" style="color:#3b82f6">2,117</div>
+                                <div class="summary-sub">คิดเป็น 67.8% ของปัญหาทั้งหมด</div>
+                            </div>
+                            <div class="summary-card alert-active" style="border-top-color:#ef4444; background: rgba(255,42,42,0.1);">
+                                <div class="summary-title">ลิฟต์ค้าง / ติดค้าง (อันดับ 2)</div>
+                                <div class="summary-value" style="color:#ef4444">629</div>
+                                <div class="summary-sub">คิดเป็น 20.1% ต้องเฝ้าระวังพิเศษ</div>
                             </div>
                             <div class="summary-card">
-                                <div class="summary-title">เคสลิฟต์ค้าง / ขัดข้อง</div>
-                                <div class="summary-value" style="color:#60a5fa">540 <span style="font-size:16px;font-weight:400">ครั้ง</span></div>
-                                <div class="summary-sub">คิดเป็น 21.15% ของเคสทั้งหมด</div>
-                            </div>
-                            <div class="summary-card alert-active">
-                                <div class="summary-title">พบคนติดค้างสะสม</div>
-                                <div class="summary-value" style="color:#ef4444">140 <span style="font-size:16px;font-weight:400">ราย</span></div>
-                                <div class="summary-sub">สูงสุดเดือน มิ.ย. (26 ราย)</div>
+                                <div class="summary-title">ระบบควบคุม / ไฟฟ้า (อันดับ 3)</div>
+                                <div class="summary-value" style="color:var(--cyan-glow)">156</div>
+                                <div class="summary-sub">คิดเป็น 5.0% ของปัญหาทั้งหมด</div>
                             </div>
                         </div>
-
                         <div class="bottom-section">
                             <div class="chart-box" style="flex: 1.2;">
-                                <div class="chart-title">📊 แนวโน้มการแจ้งซ่อมรายเดือน (ม.ค. - ก.ย. 2569)</div>
-                                <div class="chart-container-inner">
-                                    <canvas id="ytdTrendChart"></canvas>
-                                </div>
+                                <div class="chart-title">แนวโน้มการแจ้งซ่อมรายเดือน (CALL FREQUENCY TIMELINE)</div>
+                                <div class="chart-container-inner"><canvas id="ytdTrendChart"></canvas></div>
                             </div>
                             <div class="chart-box" style="flex: 1;">
-                                <div class="chart-title">🍩 สัดส่วนหมวดหมู่อาการเสียสะสม</div>
-                                <div class="chart-container-inner">
-                                    <canvas id="ytdCategoryChart"></canvas>
-                                </div>
+                                <div class="chart-title">สัดส่วนหมวดหมู่อาการเสีย (ROOT CAUSE DISTRIBUTION)</div>
+                                <div class="chart-container-inner"><canvas id="ytdCategoryChart"></canvas></div>
                             </div>
                         </div>
                     </div>
                 </div>`;
             slideIndex++;
 
-            // --- Slide 3: Top 10 High-Risk Projects ---
-            let projectRowsHTML = ytdTopProjects.map(p => `
+            // --- Slide 3: SERVICE CALL RATE DASHBOARD ---
+            let callRateRowsHTML = callRateTeams.map((t, idx) => `
                 <tr>
-                    <td style="font-weight:600; color:var(--white-color)">🏢 ${p.project}</td>
-                    <td style="font-weight:700; color:var(--gold-color)">${p.calls}</td>
-                    <td>${p.door}</td>
-                    <td>${p.stuck}</td>
-                    <td style="${p.trapped > 0 ? 'color:#ef4444; font-weight:700' : ''}">${p.trapped}</td>
-                    <td class="status-${p.color}">${p.status}</td>
+                    <td style="text-align: center; color: var(--cyan-glow); font-family: 'Share Tech Mono', monospace;">[${String(idx + 1).padStart(2,'0')}]</td>
+                    <td style="font-weight:600; color:#fff">${t.team}</td>
+                    <td style="font-weight:700; color:${t.color}; font-size: 15.5px; font-family: 'Share Tech Mono', monospace; text-align:center;">${t.rate.toFixed(3)}</td>
+                    <td style="font-family: 'Share Tech Mono', monospace; text-align:center;">${t.calls}</td>
+                    <td style="font-family: 'Share Tech Mono', monospace; text-align:center;">${t.units}</td>
                 </tr>
             `).join('');
 
             container.innerHTML += `
                 <div class="slide" id="slide-${slideIndex}">
-                    <div class="gold-line"></div>
+                    <div class="laser-line"></div>
                     <div class="slide-header">
-                        <div class="logo-text">DTRUSS ELEVATOR | High-Risk Watchlist & Project Analytics</div>
+                        ${logoHeaderHTML}
                         <div class="slide-title">
-                            <span>TOP 10 HIGH INCIDENT PROJECTS (โครงการเฝ้าระวังสูงสุด)</span>
-                            <span class="slide-date">ข้อมูลสถิติสะสม ม.ค. - ก.ย. 2569</span>
+                            <span>ประสิทธิภาพการบริการ (SERVICE CALL RATE METRICS)</span>
+                            <span class="slide-date">เกณฑ์เป้าหมายต้องไม่เกิน ≤ 0.300</span>
                         </div>
                     </div>
                     <div class="slide-content">
-                        <table>
+                        <div class="summary-grid">
+                            <div class="summary-card">
+                                <div class="summary-title">Call Rate เฉลี่ยรวมทั้งหมด</div>
+                                <div class="summary-value" style="color:#00f0ff">0.161</div>
+                                <div class="summary-sub">ภาพรวมทั้งระบบ (GLOBAL AVERAGE)</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-title">สถานะผ่านเกณฑ์ (11 ทีม)</div>
+                                <div class="summary-value" style="color:#22c55e; font-size: 26px; padding-top:4px; font-family:'Prompt',sans-serif;">ผ่านเกณฑ์ 10 ทีม</div>
+                                <div class="summary-sub">มีทีมที่เกินเกณฑ์เป้าหมาย 1 ทีม</div>
+                            </div>
+                            <div class="summary-card" style="border-top-color:#22c55e;">
+                                <div class="summary-title">ทีมที่ทำผลงานดีที่สุด</div>
+                                <div class="summary-value" style="color:#22c55e; font-size: 26px; padding-top:4px; font-family:'Prompt',sans-serif;">ภาคอีสาน</div>
+                                <div class="summary-sub">Call Rate ต่ำสุดที่ 0.056</div>
+                            </div>
+                            <div class="summary-card alert-active">
+                                <div class="summary-title">ทีมที่เกินเกณฑ์ (ต้องปรับปรุง)</div>
+                                <div class="summary-value" style="color:#ef4444; font-size: 26px; padding-top:4px; font-family:'Prompt',sans-serif;">ทีมเปเล่</div>
+                                <div class="summary-sub">Call Rate สูงสุดที่ 0.317 (631 Calls)</div>
+                            </div>
+                        </div>
+                        <div class="chart-box" style="flex:1; overflow:hidden;">
+                            <div class="chart-title">อันดับ Call Rate รายทีม เรียงจากน้อยไปมาก (TEAM RANKING DIRECTORY)</div>
+                            <table class="table-fullheight">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 10%; text-align: center;">อันดับ</th>
+                                        <th style="width: 35%">รายชื่อทีมปฏิบัติการ (SQUAD)</th>
+                                        <th style="width: 20%; text-align:center;">CALL RATE</th>
+                                        <th style="width: 15%; text-align:center;">แจ้งซ่อมรวม</th>
+                                        <th style="width: 15%; text-align:center;">จำนวนยูนิต</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${callRateRowsHTML}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>`;
+            slideIndex++;
+
+            // --- Slide 4: PM KPI DASHBOARD ---
+            let pmRowsHTML = pmTeams.map((t, idx) => `
+                <tr>
+                    <td style="text-align: center; color: var(--cyan-glow); font-family: 'Share Tech Mono', monospace;">[${String(idx + 1).padStart(2,'0')}]</td>
+                    <td style="font-weight:600; color:#fff">${t.team}</td>
+                    <td style="font-family: 'Share Tech Mono', monospace; text-align:center;">${t.units}</td>
+                    <td style="font-family: 'Share Tech Mono', monospace; text-align:center;">${t.sent} / ${t.total}</td>
+                    <td style="vertical-align: middle;">
+                        <div style="display: flex; justify-content: space-between; font-family: 'Share Tech Mono', monospace; font-size:12.5px; margin-bottom: 2px;">
+                            <span style="font-weight: 700; color: ${t.color}">${t.kpi.toFixed(2)}%</span>
+                        </div>
+                        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${t.kpi}%; background-color: ${t.color};"></div></div>
+                    </td>
+                    <td style="color: ${t.pending > 0 ? '#ef4444' : '#22c55e'}; font-weight: 700; font-family: 'Share Tech Mono', monospace; text-align:center;">${t.pending}</td>
+                </tr>
+            `).join('');
+
+            container.innerHTML += `
+                <div class="slide" id="slide-${slideIndex}">
+                    <div class="laser-line"></div>
+                    <div class="slide-header">
+                        ${logoHeaderHTML}
+                        <div class="slide-title">
+                            <span>สถิติการส่งมอบงานบำรุงรักษา (PREVENTIVE MAINTENANCE KPI)</span>
+                            <span class="slide-date">อ้างอิงสัญญา Z-AC | ม.ค. - ก.ย. 2569</span>
+                        </div>
+                    </div>
+                    <div class="slide-content">
+                        <div class="summary-grid">
+                            <div class="summary-card">
+                                <div class="summary-title">ความสำเร็จ KPI รวม</div>
+                                <div class="summary-value" style="color:#22c55e">91.41%</div>
+                                <div class="summary-sub">จำนวน 6 ทีมหลัก (1,316 ยูนิต)</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-title">รอบที่ต้องส่งทั้งหมด</div>
+                                <div class="summary-value" style="color:var(--cyan-glow)">6,322</div>
+                                <div class="summary-sub">อ้างอิงไฟล์เช็ก PM + DATA สัญญา</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-title">ส่งเอกสารยืนยันแล้ว</div>
+                                <div class="summary-value" style="color:#fff">5,779</div>
+                                <div class="summary-sub">รอบการตรวจเช็คที่ยืนยันสำเร็จ</div>
+                            </div>
+                            <div class="summary-card alert-active">
+                                <div class="summary-title">ค้างส่งเอกสาร</div>
+                                <div class="summary-value" style="color:#ef4444">543</div>
+                                <div class="summary-sub">ต้องเร่งดำเนินการติดตาม</div>
+                            </div>
+                        </div>
+                        <div class="bottom-section">
+                            <div class="chart-box" style="flex: 1;">
+                                <div class="chart-title">อันดับการส่ง PM รายทีม (กรุงเทพฯ และปริมณฑล)</div>
+                                <table class="table-fullheight">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 8%; text-align: center;">อันดับ</th>
+                                            <th style="width: 25%">ชื่อทีม</th>
+                                            <th style="width: 12%; text-align:center;">ยูนิต</th>
+                                            <th style="width: 20%; text-align:center;">ส่ง / ต้องส่ง (รอบ)</th>
+                                            <th style="width: 25%">ความสำเร็จ KPI %</th>
+                                            <th style="width: 10%; text-align:center;">ค้างส่ง</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${pmRowsHTML}</tbody>
+                                </table>
+                            </div>
+                            <div class="chart-box" style="width: 320px; background: rgba(34, 197, 94, 0.05); border-top-color: #22c55e; box-shadow: inset 0 0 20px rgba(34, 197, 94, 0.1);">
+                                <div class="chart-title" style="color: #22c55e;">ทีมช่างต่างจังหวัด (ม.ค. - ส.ค.)</div>
+                                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                                    <div style="font-family:'Orbitron',sans-serif; font-size: 54px; font-weight: 700; color: #22c55e; text-shadow: 0 0 15px rgba(34,197,94,0.6); margin-bottom: 10px;">100%</div>
+                                    <div style="font-family:'Prompt',sans-serif; font-size: 16px; color: var(--cyan-glow); margin-bottom: 10px;">ส่งงานครบ 6,084 / 6,084 รอบ</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            slideIndex++;
+
+            // --- Slide 5: Top 15 High-Risk Projects ---
+            let projectRowsHTML = ytdTopProjects.map((p, idx) => `
+                <tr>
+                    <td style="font-weight:600; color:#fff;">🏢 ${p.project}</td>
+                    <td style="font-family: 'Share Tech Mono', monospace; color:var(--cyan-glow); text-align:center; font-size:15.5px; font-weight:bold;">${p.calls}</td>
+                    <td style="text-align:center; font-family: 'Share Tech Mono', monospace;">${p.general}</td>
+                    <td style="text-align:center; font-family: 'Share Tech Mono', monospace;">${p.stuck}</td>
+                    <td style="text-align:center; font-family: 'Share Tech Mono', monospace; ${p.trapped > 0 ? 'color:#ef4444; font-weight:700;' : ''}">${p.trapped}</td>
+                    <td class="status-${p.color}" style="font-family: 'Share Tech Mono', monospace;">${p.status}</td>
+                </tr>
+            `).join('');
+
+            container.innerHTML += `
+                <div class="slide" id="slide-${slideIndex}">
+                    <div class="laser-line"></div>
+                    <div class="slide-header">
+                        ${logoHeaderHTML}
+                        <div class="slide-title">
+                            <span>15 อันดับโครงการเฝ้าระวังสูงสุด (TOP 15 HIGH-RISK WATCHLIST)</span>
+                            <span class="slide-date">ข้อมูลสะสมตั้งแต่ ม.ค. - ต.ค. 2569</span>
+                        </div>
+                    </div>
+                    <div class="slide-content">
+                        <table class="table-fullheight">
                             <thead>
                                 <tr>
-                                    <th style="width: 25%">ชื่อโครงการ</th>
-                                    <th style="width: 15%">แจ้งซ่อมรวม (ครั้ง)</th>
-                                    <th style="width: 15%">ปัญหาประตู (ครั้ง)</th>
-                                    <th style="width: 15%">ลิฟต์ค้าง (ครั้ง)</th>
-                                    <th style="width: 15%">พบคนติดค้าง (ราย)</th>
-                                    <th style="width: 15%">สถานะประเมินเฝ้าระวัง</th>
+                                    <th style="width: 25%">ชื่อโครงการ / สถานที่</th>
+                                    <th style="width: 15%; text-align:center;">แจ้งซ่อมรวม</th>
+                                    <th style="width: 15%; text-align:center;">ประตู/ทั่วไป</th>
+                                    <th style="width: 15%; text-align:center;">ลิฟต์ค้าง</th>
+                                    <th style="width: 15%; text-align:center;">พบคนติดค้าง</th>
+                                    <th style="width: 15%">สถานะประเมิน (THREAT LEVEL)</th>
                                 </tr>
                             </thead>
                             <tbody>${projectRowsHTML}</tbody>
@@ -904,49 +874,52 @@
 
             // --- Field Team Slides ---
             const teams = [
-                { name: 'TEAM TIW (ทีมทิว)', data: dataTiw },
-                { name: 'TEAM PELE (ทีมเปเล่)', data: dataPele },
-                { name: 'TEAM JET (ทีมเจ็ท)', data: dataJet },
-                { name: 'TEAM NUT (ทีมช่างนัท)', data: dataNut },
-                { name: 'REGIONAL TEAM (ช่างต่างจังหวัด)', data: dataUpcountry }
+                { name: 'ทีมทิว (TIW SQUAD)', data: dataTiw },
+                { name: 'ทีมเปเล่ (PELE SQUAD)', data: dataPele },
+                { name: 'ทีมเจ็ท (JET SQUAD)', data: dataJet },
+                { name: 'ทีมช่างนัท (NUT SQUAD)', data: dataNut },
+                { name: 'ทีมต่างจังหวัด (REGIONAL)', data: dataUpcountry }
             ];
 
             teams.forEach(t => {
                 const chunks = chunkArray(t.data, MAX_ROWS_PER_PAGE);
                 chunks.forEach((chunk, pageIdx) => {
                     const pageText = chunks.length > 1 ? ` (หน้า ${pageIdx + 1}/${chunks.length})` : '';
-                    let tableRowsHTML = '';
-
-                    if (chunk.length === 0) {
-                        tableRowsHTML = '<tr><td colspan="6" style="text-align:center; color:var(--gray-color);">ไม่มีภารกิจ</td></tr>';
-                    } else {
-                        tableRowsHTML = chunk.map(r => {
+                    let tableRowsHTML = chunk.length === 0 ? 
+                        '<tr><td colspan="6" style="text-align:center; color:var(--gray-color);">ไม่มีภารกิจในรอบนี้</td></tr>' : 
+                        chunk.map(r => {
                             const stat = currentMode === 'morning' ? r.statusM : r.statusA;
                             const col = currentMode === 'morning' ? r.cM : r.cA;
-                            return `<tr><td>${r.name}</td><td>${r.place}</td><td>${r.code}</td><td>${r.qty}</td><td>${r.contact}</td><td class="status-${col}">${getStatusIcon(col)}${stat}</td></tr>`;
+                            return `<tr>
+                                <td>${r.name}</td>
+                                <td style="color:#fff">${r.place}</td>
+                                <td style="font-family:'Share Tech Mono',monospace; color:var(--cyan-glow); text-align:center;">${r.code}</td>
+                                <td style="text-align:center; font-family:'Share Tech Mono',monospace;">${r.qty}</td>
+                                <td>${r.contact}</td>
+                                <td class="status-${col}">${getStatusIcon(col)}${stat}</td>
+                            </tr>`;
                         }).join('');
-                    }
 
                     container.innerHTML += `
                         <div class="slide" id="slide-${slideIndex}">
-                            <div class="gold-line"></div>
+                            <div class="laser-line"></div>
                             <div class="slide-header">
-                                <div class="logo-text">DTRUSS ELEVATOR | Operations Command Center</div>
+                                ${logoHeaderHTML}
                                 <div class="slide-title">
-                                    <span>FIELD OPERATIONS: ${t.name}${pageText}</span>
-                                    <span class="slide-date">รวม ${t.data.length} ภารกิจ</span>
+                                    <span>รายงานปฏิบัติการภาคสนาม: ${t.name}${pageText}</span>
+                                    <span class="slide-date">ภารกิจที่รับผิดชอบ: ${t.data.length} รายการ</span>
                                 </div>
                             </div>
                             <div class="slide-content">
-                                <table>
+                                <table class="table-fullheight">
                                     <thead>
                                         <tr>
-                                            <th style="width: 10%">ช่าง</th>
+                                            <th style="width: 12%">ชื่อช่าง (OP.)</th>
                                             <th style="width: 25%">สถานที่ / โครงการ</th>
-                                            <th style="width: 10%">CODE</th>
-                                            <th style="width: 10%">จำนวนชั้น</th>
+                                            <th style="width: 10%; text-align:center;">รหัส CODE</th>
+                                            <th style="width: 10%; text-align:center;">จำนวนชั้น</th>
                                             <th style="width: 20%">ผู้ติดต่อ</th>
-                                            <th style="width: 25%">สถานะ (${periodStr})</th>
+                                            <th style="width: 23%">สถานะ (${periodStr})</th>
                                         </tr>
                                     </thead>
                                     <tbody>${tableRowsHTML}</tbody>
@@ -962,25 +935,29 @@
             mgmtChunks.forEach((chunk, pageIdx) => {
                 const pageText = mgmtChunks.length > 1 ? ` (หน้า ${pageIdx + 1}/${mgmtChunks.length})` : '';
                 let mgmtRowsHTML = chunk.length > 0 ? chunk.map(r => 
-                    `<tr><td>${r.name}</td><td style="color:var(--gold-color);">${r.task}</td><td>${currentMode === 'morning' ? r.descM : r.descA}</td></tr>`
-                ).join('') : '<tr><td colspan="3" style="text-align:center; color:var(--gray-color);">ไม่มีภารกิจ</td></tr>';
+                    `<tr>
+                        <td>${r.name}</td>
+                        <td style="color:var(--cyan-glow);">${r.task}</td>
+                        <td style="color:#fff;">${currentMode === 'morning' ? r.descM : r.descA}</td>
+                    </tr>`
+                ).join('') : '<tr><td colspan="3" style="text-align:center; color:var(--gray-color);">ไม่มีภารกิจในรอบนี้</td></tr>';
 
                 container.innerHTML += `
                     <div class="slide" id="slide-${slideIndex}">
-                        <div class="gold-line"></div>
+                        <div class="laser-line"></div>
                         <div class="slide-header">
-                            <div class="logo-text">DTRUSS ELEVATOR | Operations Command Center</div>
+                            ${logoHeaderHTML}
                             <div class="slide-title">
-                                <span>MANAGEMENT & SPECIAL PROJECTS (ทีมบริหารส่วนกลาง)${pageText}</span>
-                                <span class="slide-date">รวม ${dataMgmt.length} ท่าน / ภารกิจ</span>
+                                <span>รายงานทีมบริหารส่วนกลาง (MANAGEMENT & SPECIAL PROJECTS)${pageText}</span>
+                                <span class="slide-date">ผู้ปฏิบัติงาน: ${dataMgmt.length} ท่าน</span>
                             </div>
                         </div>
                         <div class="slide-content">
-                            <table>
+                            <table class="table-fullheight">
                                 <thead>
                                     <tr>
-                                        <th style="width: 20%">ผู้รับผิดชอบ</th>
-                                        <th style="width: 20%">ภารกิจหลัก</th>
+                                        <th style="width: 20%">ผู้รับผิดชอบ (OFFICER)</th>
+                                        <th style="width: 20%">ภารกิจหลัก (DIRECTIVE)</th>
                                         <th style="width: 60%">รายละเอียดงาน (${periodStr})</th>
                                     </tr>
                                 </thead>
@@ -999,36 +976,36 @@
                     const stat = currentMode === 'morning' ? r.statusM : r.statusA;
                     const col = currentMode === 'morning' ? r.cM : r.cA;
                     return `<tr>
-                        <td>${r.timeAlert}</td>
-                        <td style="color:var(--white-color); font-weight: 500;">${r.place}</td>
-                        <td>${r.issue}</td>
+                        <td style="font-family:'Share Tech Mono',monospace; text-align:center;">${r.timeAlert}</td>
+                        <td style="color:#fff; font-weight: 500;">${r.place}</td>
+                        <td style="color:var(--cyan-glow);">${r.issue}</td>
                         <td>${r.name}</td>
-                        <td>${r.timeArrive}</td>
-                        <td>${r.timeFinish}</td>
+                        <td style="font-family:'Share Tech Mono',monospace; text-align:center;">${r.timeArrive}</td>
+                        <td style="font-family:'Share Tech Mono',monospace; text-align:center;">${r.timeFinish}</td>
                         <td class="status-${col}">${getStatusIcon(col)}${stat}</td>
                     </tr>`;
-                }).join('') : '<tr><td colspan="7" style="text-align:center; color:var(--gray-color);">ไม่มีข้อมูลแจ้งซ่อม</td></tr>';
+                }).join('') : '<tr><td colspan="7" style="text-align:center; color:var(--gray-color);">ไม่พบข้อมูลแจ้งซ่อมฉุกเฉินในขณะนี้</td></tr>';
 
                 container.innerHTML += `
                     <div class="slide" id="slide-${slideIndex}">
-                        <div class="gold-line"></div>
+                        <div class="laser-line"></div>
                         <div class="slide-header">
-                            <div class="logo-text">DTRUSS ELEVATOR | Operations Command Center</div>
+                            ${logoHeaderHTML}
                             <div class="slide-title">
-                                <span>ELEVATOR BREAKDOWN MONITORING (ระบบรับแจ้งซ่อมฉุกเฉิน)${pageText}</span>
+                                <span>ระบบรับแจ้งซ่อมฉุกเฉิน (EMERGENCY BREAKDOWN MONITORING)${pageText}</span>
                                 <span class="slide-date">อัปเดตข้อมูลล่าสุด (${periodStr})</span>
                             </div>
                         </div>
                         <div class="slide-content">
-                            <table>
+                            <table class="table-fullheight">
                                 <thead>
                                     <tr>
-                                        <th style="width: 8%">เวลาแจ้ง</th>
+                                        <th style="width: 8%; text-align:center;">เวลาแจ้ง</th>
                                         <th style="width: 22%">ลูกค้า / สถานที่</th>
                                         <th style="width: 22%">อาการเบื้องต้น</th>
-                                        <th style="width: 12%">ช่างรับงาน</th>
-                                        <th style="width: 9%">ถึงหน้างาน</th>
-                                        <th style="width: 9%">จบงาน</th>
+                                        <th style="width: 12%">ช่างที่รับงาน</th>
+                                        <th style="width: 9%; text-align:center;">ถึงหน้างาน</th>
+                                        <th style="width: 9%; text-align:center;">แก้จบงาน</th>
                                         <th style="width: 18%">สถานะการซ่อม (${periodStr})</th>
                                     </tr>
                                 </thead>
@@ -1039,15 +1016,15 @@
                 slideIndex++;
             });
 
-            // --- Slide Map / Location ---
+            // --- Slide Map ---
             container.innerHTML += `
                 <div class="slide" id="slide-${slideIndex}">
-                    <div class="gold-line"></div>
+                    <div class="laser-line"></div>
                     <div class="slide-header">
-                        <div class="logo-text">DTRUSS ELEVATOR | Operations Command Center</div>
+                        ${logoHeaderHTML}
                         <div class="slide-title">
-                            <span>FIELD OPERATIONS MAP (แผนที่ตำแหน่งงานปฏิบัติการ)</span>
-                            <span class="slide-date">อ้างอิงพิกัดจากโครงการประจำวัน</span>
+                            <span>แผนที่พิกัดปฏิบัติการ (TACTICAL OPERATIONS MAP)</span>
+                            <span class="slide-date">ระบุตำแหน่ง GPS เรียลไทม์ตามโครงการประจำวัน</span>
                         </div>
                     </div>
                     <div class="slide-content">
@@ -1058,74 +1035,48 @@
             totalSlidesCount = slideIndex; 
             document.getElementById('total-slides').textContent = totalSlidesCount;
             
-            updatePieChart();
-            renderYTDCharts();
-
+            updatePieChart(); renderYTDCharts();
             if (currentSlide > totalSlidesCount) currentSlide = 1;
-            showSlide(currentSlide);
-            scalePresentation();
+            showSlide(currentSlide); scalePresentation();
         }
 
-        // Leaflet Map Initialization
         function initMap() {
             const mapEl = document.getElementById('map-container');
             if (!mapEl || map) return;
             map = L.map('map-container').setView([13.7563, 100.5018], 8);
-            
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-                maxZoom: 19,
-                attribution: 'Tiles &copy; Esri'
-            }).addTo(map);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(map);
         }
 
         function createPinIcon(color) {
-            let colorHex = '#4ade80';
-            let extraClass = '';
-            if (color === 'blue') colorHex = '#60a5fa';
-            if (color === 'yellow') colorHex = '#facc15';
-            if (color === 'red') {
-                colorHex = '#ef4444';
-                extraClass = 'custom-map-pin-red';
-            }
-            if (color === 'gray') colorHex = '#94A3B8';
-
+            let colorHex = color === 'red' ? '#ff2a2a' : (color === 'yellow' ? '#facc15' : (color === 'blue' ? '#00f0ff' : '#22c55e'));
+            let extraClass = color === 'red' ? 'custom-map-pin-red' : '';
             return L.divIcon({
                 className: `custom-map-pin ${extraClass}`,
-                html: `<div style="background-color: ${colorHex}; width: 22px; height: 22px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 12px ${colorHex};"></div>`,
-                iconSize: [22, 22], iconAnchor: [11, 11], popupAnchor: [0, -12]
+                html: `<div style="background-color: ${colorHex}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #010409; box-shadow: 0 0 15px ${colorHex};"></div>`,
+                iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10]
             });
         }
 
         function updateMapMarkers() {
             if (!map) return;
-            mapMarkers.forEach(m => map.removeLayer(m));
-            mapMarkers = [];
-
+            mapMarkers.forEach(m => map.removeLayer(m)); mapMarkers = [];
             const allTeamData = [...dataTiw, ...dataPele, ...dataJet, ...dataNut, ...dataUpcountry];
             const bounds = [];
 
             allTeamData.forEach(item => {
                 if (item.coords && item.coords.includes(',')) {
-                    const parts = item.coords.split(',');
-                    const lat = parseFloat(parts[0]);
-                    const lng = parseFloat(parts[1]);
-
+                    const [lat, lng] = item.coords.split(',').map(Number);
                     if (!isNaN(lat) && !isNaN(lng)) {
                         const col = currentMode === 'morning' ? item.cM : item.cA;
                         const stat = currentMode === 'morning' ? item.statusM : item.statusA;
-
                         const popupHTML = `
                             <div style="font-family:'Prompt',sans-serif; color:#fff; font-size:13px; line-height:1.5; padding:5px;">
-                                <strong style="font-size:15px; color:var(--gold-color);">🏢 ${item.place}</strong><br>
+                                <strong style="font-size:15px; color:var(--cyan-glow);">[${item.place}]</strong><br>
                                 <b>ทีม:</b> ${item.team} (${item.name})<br>
-                                <b>CODE:</b> ${item.code} (${item.qty} ชั้น)<br>
-                                <b>ผู้ติดต่อ:</b> ${item.contact}<br>
                                 <b>สถานะ:</b> ${getStatusIcon(col)} ${stat}
                             </div>`;
-
                         const marker = L.marker([lat, lng], { icon: createPinIcon(col) }).addTo(map).bindPopup(popupHTML);
-                        mapMarkers.push(marker);
-                        bounds.push([lat, lng]);
+                        mapMarkers.push(marker); bounds.push([lat, lng]);
                     }
                 }
             });
@@ -1133,7 +1084,6 @@
             if (bounds.length > 0) { map.fitBounds(bounds, { padding: [50, 50] }); }
         }
 
-        // Slide Navigation
         function showSlide(n) {
             document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
             const targetSlide = document.getElementById('slide-' + n);
@@ -1144,25 +1094,14 @@
                 const totalField = dataTiw.length + dataPele.length + dataJet.length + dataNut.length + dataUpcountry.length;
                 let repairActive = dataRepair.filter(r => r.place !== '-' && r.place !== '').length;
                 let alertCount = [...dataTiw, ...dataPele, ...dataJet, ...dataNut, ...dataUpcountry].filter(r => {
-                    const col = currentMode === 'morning' ? r.cM : r.cA;
-                    return col === 'red' || col === 'yellow';
+                    const col = currentMode === 'morning' ? r.cM : r.cA; return col === 'red' || col === 'yellow';
                 }).length;
-
                 animateNumberCount('kpi-total', totalField + dataMgmt.length);
                 animateNumberCount('kpi-teams', 5);
                 animateNumberCount('kpi-repair', repairActive);
                 animateNumberCount('kpi-alerts', alertCount);
             }
-
-            if (n === totalSlidesCount) {
-                setTimeout(() => {
-                    initMap();
-                    if (map) {
-                        map.invalidateSize(true);
-                        updateMapMarkers();
-                    }
-                }, 400);
-            }
+            if (n === totalSlidesCount) { setTimeout(() => { initMap(); if (map) { map.invalidateSize(true); updateMapMarkers(); } }, 400); }
         }
 
         function nextSlide() { currentSlide = currentSlide >= totalSlidesCount ? 1 : currentSlide + 1; showSlide(currentSlide); }
@@ -1170,15 +1109,8 @@
 
         function togglePlay() {
             const btn = document.getElementById('btn-play');
-            if (isPlaying) {
-                clearInterval(playInterval);
-                btn.innerHTML = '▶ เล่นสไลด์วนทีวี (20s)';
-                btn.classList.remove('playing');
-            } else {
-                playInterval = setInterval(nextSlide, 20000);
-                btn.innerHTML = '⏸ หยุดเล่นอัตโนมัติ';
-                btn.classList.add('playing');
-            }
+            if (isPlaying) { clearInterval(playInterval); btn.innerHTML = 'เล่นสไลด์อัตโนมัติ'; btn.classList.remove('playing'); } 
+            else { playInterval = setInterval(nextSlide, 20000); btn.innerHTML = 'หยุดเล่นอัตโนมัติ'; btn.classList.add('playing'); }
             isPlaying = !isPlaying;
         }
 
@@ -1187,36 +1119,20 @@
             else { if (document.exitFullscreen) document.exitFullscreen(); }
         }
 
-        // Controls Event Listeners
         document.getElementById('btn-next').addEventListener('click', nextSlide);
         document.getElementById('btn-prev').addEventListener('click', prevSlide);
         document.getElementById('btn-play').addEventListener('click', togglePlay);
         document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
         document.getElementById('btn-sync').addEventListener('click', loadAllDataFromGoogleSheets);
 
-        document.getElementById('btn-morning').addEventListener('click', (e) => {
-            currentMode = 'morning';
-            e.target.classList.add('active-mode');
-            document.getElementById('btn-afternoon').classList.remove('active-mode');
-            renderDynamicSlides();
-        });
-
-        document.getElementById('btn-afternoon').addEventListener('click', (e) => {
-            currentMode = 'afternoon';
-            e.target.classList.add('active-mode');
-            document.getElementById('btn-morning').classList.remove('active-mode');
-            renderDynamicSlides();
-        });
-
         function scalePresentation() {
             const container = document.getElementById('presentation-container');
-            const scale = Math.min(container.clientWidth / 1280, container.clientHeight / 680);
+            const scale = Math.min(container.clientWidth / 1280, container.clientHeight / 720);
             document.querySelectorAll('.slide').forEach(slide => slide.style.transform = `scale(${scale})`);
         }
         window.addEventListener('resize', scalePresentation);
 
-        // Initial Load
-        loadAllDataFromGoogleSheets();
+        loadAllDataFromGoogleSheets().then(() => { togglePlay(); });
         setInterval(loadAllDataFromGoogleSheets, 300000);
     </script>
 </body>
